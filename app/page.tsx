@@ -2,12 +2,6 @@
 
 import { useState, useRef } from "react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
-import { Toaster } from "@/components/ui/toaster"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Define dimension descriptions
 const dimensionDescriptions: Record<string, string> = {
@@ -37,8 +31,8 @@ export default function PartCustomization() {
   const [currentDimension, setCurrentDimension] = useState<string | null>(null)
   const [dimensionValue, setDimensionValue] = useState("")
   const [showError, setShowError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
   const printRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLDivElement>(null)
 
   // Check if all dimensions are filled
   const allDimensionsFilled = () => {
@@ -67,11 +61,11 @@ export default function PartCustomization() {
   const handlePrint = () => {
     if (!allDimensionsFilled()) {
       setShowError(true)
-      toast({
-        title: "Error",
-        description: "Please fill in all dimensions before printing.",
-        variant: "destructive",
-      })
+      setErrorMessage("Please fill in all dimensions before printing.")
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setShowError(false)
+      }, 5000)
       return
     }
 
@@ -93,37 +87,35 @@ export default function PartCustomization() {
 
   // Define dimension button positions as percentages of the image
   const dimensionPositions: Record<string, { x: number; y: number }> = {
-    A: { x: 14.4, y: 40.7 },
-    B: { x: 14.4, y: 45.4 },
-    C: { x: 11.1, y: 48.9 },
-    D: { x: 39.8, y: 50.7 },
-    E: { x: 53.8, y: 50.7 },
-    F: { x: 11.1, y: 60.7 },
-    G: { x: 66.9, y: 60.7 },
-    H: { x: 11.1, y: 67.3 },
-    I: { x: 66.9, y: 67.3 },
-    J: { x: 66.9, y: 55.9 },
-    K: { x: 46.1, y: 51.6 },
-    L: { x: 93.1, y: 49.8 },
-    M: { x: 46.1, y: 29.8 },
-    N: { x: 46.1, y: 31.8 },
-    O: { x: 72.4, y: 42.5 },
-    P: { x: 72.4, y: 40.1 },
+    A: { x: 15.7, y: 29.4 },
+    B: { x: 19.8, y: 42 },
+    C: { x: 19.1, y: 51.4 },
+    D: { x: 28.6, y: 50.2 },
+    E: { x: 33.9, y: 52.5 },
+    F: { x: 19.6, y: 85.2 },
+    G: { x: 41.5, y: 83.1 },
+    H: { x: 18.4, y: 98.7 },
+    I: { x: 43.2, y: 98.8 },
+    J: { x: 43.5, y: 67.2 },
+    K: { x: 31.8, y: 55.5 },
+    L: { x: 59.2, y: 51.6 },
+    M: { x: 29.8, y: 1.5 },
+    N: { x: 31.8, y: 4.3 },
+    O: { x: 42, y: 33.5 },
+    P: { x: 45.4, y: 29 },
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 print:p-0 mx-auto light">
-      <Toaster />
-
       {/* A4 Container */}
       <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
         {/* Save as PDF Button - Top Right Corner */}
-        <Button
+        <button
           onClick={handlePrint}
-          className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white"
+          className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
         >
           Save as PDF
-        </Button>
+        </button>
 
         {/* Title */}
         <h1 className="text-2xl font-bold text-center mb-4">Feeder Configuration Report</h1>
@@ -136,11 +128,11 @@ export default function PartCustomization() {
               <label htmlFor="machine-no" className="block mb-1 font-medium">
                 Machine no.
               </label>
-              <Input
+              <input
                 id="machine-no"
                 value={machineNo}
                 onChange={(e) => setMachineNo(e.target.value)}
-                className="w-full"
+                className="w-full border rounded-md px-3 py-2"
               />
             </div>
 
@@ -148,22 +140,27 @@ export default function PartCustomization() {
               <label htmlFor="rotation" className="block mb-1 font-medium">
                 Rotation
               </label>
-              <Select value={rotation} onValueChange={setRotation}>
-                <SelectTrigger id="rotation" className="w-full">
-                  <SelectValue placeholder="Select rotation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Clockwise">Clockwise</SelectItem>
-                  <SelectItem value="Anti-clockwise">Anti-clockwise</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="rotation"
+                value={rotation}
+                onChange={(e) => setRotation(e.target.value)}
+                className="w-full border rounded-md px-3 py-2"
+              >
+                <option value="Clockwise">Clockwise</option>
+                <option value="Anti-clockwise">Anti-clockwise</option>
+              </select>
             </div>
 
             <div>
               <label htmlFor="uph" className="block mb-1 font-medium">
                 UPH
               </label>
-              <Input id="uph" value={uph} onChange={(e) => setUph(e.target.value)} className="w-full" />
+              <input
+                id="uph"
+                value={uph}
+                onChange={(e) => setUph(e.target.value)}
+                className="w-full border rounded-md px-3 py-2"
+              />
             </div>
           </div>
         </div>
@@ -237,31 +234,39 @@ export default function PartCustomization() {
               <h3 className="text-lg font-bold mb-4">
                 Enter dimension {currentDimension}: {dimensionDescriptions[currentDimension]}
               </h3>
-              <Input
+              <input
                 type="number"
                 value={dimensionValue}
                 onChange={(e) => setDimensionValue(e.target.value)}
                 placeholder="Enter value in mm"
                 autoFocus
-                className="mb-4"
+                className="w-full border rounded-md px-3 py-2 mb-4"
               />
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setCurrentDimension(null)}>
+                <button
+                  onClick={() => setCurrentDimension(null)}
+                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
+                >
                   Cancel
-                </Button>
-                <Button onClick={saveDimension}>Save</Button>
+                </button>
+                <button
+                  onClick={saveDimension}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Error Message */}
-        {showError && !allDimensionsFilled() && (
-          <Alert variant="destructive" className="mt-2 print:hidden">
-            <AlertDescription>Please fill in all dimensions before printing.</AlertDescription>
-          </Alert>
-        )}
       </div>
+
+      {/* Custom Error Toast - Fixed Position */}
+      {showError && (
+        <div className="fixed bottom-4 right-4 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
+          {errorMessage}
+        </div>
+      )}
     </div>
   )
 }
