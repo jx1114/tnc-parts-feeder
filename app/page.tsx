@@ -184,7 +184,7 @@ export default function PartCustomization() {
                 onClick={() => handleDimensionClick(dim)}
                 className={`absolute text-xs flex items-center justify-center ${
                   dimensions[dim]
-                    ? "bg-transparent border-none text-black"
+                    ? "bg-white border-none text-black"
                     : "bg-white border border-red-500 text-red-500"
                 }`}
                 style={{
