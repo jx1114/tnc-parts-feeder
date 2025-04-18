@@ -3,29 +3,14 @@
 import { useState, useRef } from "react"
 import Image from "next/image"
 
-// Define dimension descriptions
 const dimensionDescriptions: Record<string, string> = {
-  A: "Height",
-  B: "Linear track length",
-  C: "Base height",
-  D: "Track width",
-  E: "Base width",
-  F: "Actuator height",
-  G: "Total height",
-  H: "Floor clearance",
-  I: "Base depth",
-  J: "Hopper height",
-  K: "Hopper width",
-  L: "Total width",
-  M: "Top width",
-  N: "Inner width",
-  O: "Bowl height",
-  P: "Total height with bowl",
+  A: "", B: "", C: "", D: "", E: "", F: "", G: "", H: "",
+  I: "", J: "", K: "", L: "", M: "", N: "", O: "", P: ""
 }
 
 export default function PartCustomization() {
   const [machineNo, setMachineNo] = useState("")
-  const [rotation, setRotation] = useState("Clockwise")
+  const [rotation, setRotation] = useState("")
   const [uph, setUph] = useState("")
   const [dimensions, setDimensions] = useState<Record<string, string>>({})
   const [currentDimension, setCurrentDimension] = useState<string | null>(null)
@@ -34,18 +19,19 @@ export default function PartCustomization() {
   const [errorMessage, setErrorMessage] = useState("")
   const printRef = useRef<HTMLDivElement>(null)
 
-  // Check if all dimensions are filled
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => dimensions[key])
   }
 
-  // Handle dimension button click
+  const machineInfoComplete = () => {
+    return machineNo.trim() !== "" && rotation.trim() !== "" && uph.trim() !== ""
+  }
+
   const handleDimensionClick = (dimension: string) => {
     setCurrentDimension(dimension)
     setDimensionValue(dimensions[dimension] || "")
   }
 
-  // Save dimension value
   const saveDimension = () => {
     if (currentDimension && dimensionValue) {
       setDimensions({
@@ -57,15 +43,18 @@ export default function PartCustomization() {
     }
   }
 
-  // Handle print/save as PDF
   const handlePrint = () => {
+    if (!machineInfoComplete()) {
+      setShowError(true)
+      setErrorMessage("Please fill in all machine information before printing.")
+      setTimeout(() => setShowError(false), 5000)
+      return
+    }
+
     if (!allDimensionsFilled()) {
       setShowError(true)
       setErrorMessage("Please fill in all dimensions before printing.")
-      // Auto-hide error after 5 seconds
-      setTimeout(() => {
-        setShowError(false)
-      }, 5000)
+      setTimeout(() => setShowError(false), 5000)
       return
     }
 
@@ -73,7 +62,6 @@ export default function PartCustomization() {
     window.print()
   }
 
-  // Format current date as DD/MM/YYYY
   const getCurrentDate = () => {
     const now = new Date()
     const day = String(now.getDate()).padStart(2, "0")
@@ -81,35 +69,21 @@ export default function PartCustomization() {
     const year = now.getFullYear()
     const hours = String(now.getHours()).padStart(2, "0")
     const minutes = String(now.getMinutes()).padStart(2, "0")
-
     return `${day}/${month}/${year} at ${hours}:${minutes}`
   }
 
-  // Define dimension button positions as percentages of the image
   const dimensionPositions: Record<string, { x: number; y: number }> = {
-    A: { x: 15.7, y: 29.4 },
-    B: { x: 19.8, y: 42 },
-    C: { x: 19.1, y: 51.4 },
-    D: { x: 28.6, y: 50.2 },
-    E: { x: 33.9, y: 52.5 },
-    F: { x: 19.6, y: 85.2 },
-    G: { x: 41.5, y: 83.1 },
-    H: { x: 18.4, y: 98.7 },
-    I: { x: 43.2, y: 98.8 },
-    J: { x: 43.5, y: 67.2 },
-    K: { x: 31.8, y: 55.5 },
-    L: { x: 59.2, y: 51.6 },
-    M: { x: 29.8, y: 1.5 },
-    N: { x: 31.8, y: 4.3 },
-    O: { x: 42, y: 33.5 },
+    A: { x: 15.7, y: 29.4 }, B: { x: 19.8, y: 42 }, C: { x: 19.1, y: 51.4 },
+    D: { x: 28.6, y: 50.2 }, E: { x: 33.9, y: 52.5 }, F: { x: 19.6, y: 85.2 },
+    G: { x: 41.5, y: 83.1 }, H: { x: 18.4, y: 98.7 }, I: { x: 43.2, y: 98.8 },
+    J: { x: 43.5, y: 67.2 }, K: { x: 31.8, y: 55.5 }, L: { x: 59.2, y: 51.6 },
+    M: { x: 29.8, y: 1.5 }, N: { x: 31.8, y: 4.3 }, O: { x: 42, y: 33.5 },
     P: { x: 45.4, y: 29 },
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 print:p-0 mx-auto light">
-      {/* A4 Container */}
       <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
-        {/* Save as PDF Button - Top Right Corner */}
         <button
           onClick={handlePrint}
           className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
@@ -117,67 +91,63 @@ export default function PartCustomization() {
           Save as PDF
         </button>
 
-        {/* Title */}
         <h1 className="text-2xl font-bold text-center mb-4">Feeder Configuration Report</h1>
 
-        {/* Machine Information - 1/6 of the page */}
+        {/* Machine Info Section */}
         <div className="border rounded-md p-3 mb-3" style={{ flex: "1" }}>
           <h2 className="text-lg font-medium mb-2">Machine Information</h2>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label htmlFor="machine-no" className="block mb-1 font-medium">
-                Machine no.
-              </label>
+              <label htmlFor="machine-no" className="block mb-1 font-medium">Machine no.</label>
               <input
                 id="machine-no"
                 value={machineNo}
                 onChange={(e) => setMachineNo(e.target.value)}
-                className="w-full border rounded-md px-3 py-2"
+                className={`w-full border rounded-md px-3 py-2 ${
+                  machineNo.trim() === "" ? "border-red-500" : ""
+                }`}
               />
             </div>
-
             <div>
-              <label htmlFor="rotation" className="block mb-1 font-medium">
-                Rotation
-              </label>
+              <label htmlFor="rotation" className="block mb-1 font-medium">Rotation</label>
               <select
                 id="rotation"
                 value={rotation}
                 onChange={(e) => setRotation(e.target.value)}
-                className="w-full border rounded-md px-3 py-2"
+                className={`w-full border rounded-md px-3 py-2 ${
+                  rotation.trim() === "" ? "border-red-500" : ""
+                }`}
               >
+                <option value="">Select</option>
                 <option value="Clockwise">Clockwise</option>
                 <option value="Anti-clockwise">Anti-clockwise</option>
               </select>
             </div>
-
             <div>
-              <label htmlFor="uph" className="block mb-1 font-medium">
-                UPH
-              </label>
+              <label htmlFor="uph" className="block mb-1 font-medium">UPH</label>
               <input
                 id="uph"
                 value={uph}
                 onChange={(e) => setUph(e.target.value)}
-                className="w-full border rounded-md px-3 py-2"
+                className={`w-full border rounded-md px-3 py-2 ${
+                  uph.trim() === "" ? "border-red-500" : ""
+                }`}
               />
             </div>
           </div>
         </div>
 
-        {/* Feeder Design - 3/6 of the page */}
+        {/* Feeder Design Section */}
         <div className="border rounded-md p-3 mb-3" style={{ flex: "3" }}>
           <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
           <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
             <Image
-              src="/dimension-drawing.jpg"
+              src="/dimension-drawing.jpeg"
               alt="Dimension Drawing"
               fill
               style={{ objectFit: "contain" }}
               priority
             />
-
-            {/* Dimension Buttons - positioned relative to the image */}
             {Object.entries(dimensionPositions).map(([dim, { x, y }]) => (
               <button
                 key={dim}
@@ -202,7 +172,7 @@ export default function PartCustomization() {
           </div>
         </div>
 
-        {/* Dimensions Summary - 2/6 of the page */}
+        {/* Dimensions Summary */}
         <div className="border rounded-md p-3" style={{ flex: "2" }}>
           <h2 className="text-lg font-medium mb-2">Dimensions Summary</h2>
           <div className="grid grid-cols-4 gap-1">
@@ -224,10 +194,9 @@ export default function PartCustomization() {
           </div>
         </div>
 
-        {/* Generated Date */}
         <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
 
-        {/* Dimension Input Dialog */}
+        {/* Input Dimension Dialog */}
         {currentDimension && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
             <div className="bg-white p-6 rounded-lg shadow-lg w-80">
@@ -243,16 +212,10 @@ export default function PartCustomization() {
                 className="w-full border rounded-md px-3 py-2 mb-4"
               />
               <div className="flex justify-end space-x-2">
-                <button
-                  onClick={() => setCurrentDimension(null)}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
-                >
+                <button onClick={() => setCurrentDimension(null)} className="px-4 py-2 border rounded-md hover:bg-gray-100">
                   Cancel
                 </button>
-                <button
-                  onClick={saveDimension}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
+                <button onClick={saveDimension} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                   Save
                 </button>
               </div>
@@ -261,7 +224,7 @@ export default function PartCustomization() {
         )}
       </div>
 
-      {/* Custom Error Toast - Fixed Position */}
+      {/* Error Toast */}
       {showError && (
         <div className="fixed bottom-4 right-4 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
           {errorMessage}
