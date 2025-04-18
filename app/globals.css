@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  body {
+    @apply bg-white text-gray-900;
+  }
+}
+
+/* Force light theme */
+html {
+  color-scheme: light;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    height: 297mm;
+    color-scheme: light;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+}
+
+/* Ensure consistent rendering between screen and print */
+.print-container {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 0;
+  margin: 0 auto;
+  background: white;
+  box-sizing: border-box;
+}
+
+@media screen {
+  .print-container {
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+}
