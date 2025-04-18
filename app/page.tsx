@@ -226,7 +226,7 @@ export default function PartCustomization() {
 
       {/* Error Toast */}
       {showError && (
-        <div className="fixed bottom-4 right-4 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
+        <div className="fixed bottom-12 right-16 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
           {errorMessage}
         </div>
       )}
