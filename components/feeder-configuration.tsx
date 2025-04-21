@@ -119,8 +119,11 @@ export default function FeederConfiguration({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 print:p-0 mx-auto light">
-      <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
+    <div className="min-h-screen flex flex-col items-center p-2 print:p-0 mx-auto">
+      <div
+        ref={printRef}
+        className="print-container flex flex-col h-auto min-h-[297mm] p-3 print:p-0 relative w-full max-w-full overflow-x-hidden"
+      >
         <button
           onClick={handlePrint}
           className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
@@ -131,9 +134,9 @@ export default function FeederConfiguration({
         <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
 
         {/* Machine Information */}
-        <div className="border rounded-md p-3 mb-3" style={{ flex: "1" }}>
+        <div className="border rounded-md p-3 mb-3">
           <h2 className="text-lg font-medium mb-2">Machine Information</h2>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {machineInfoFields.map((field) => (
               <div key={field.id}>
                 <label htmlFor={field.id} className="block mb-1 font-medium">
@@ -172,7 +175,7 @@ export default function FeederConfiguration({
         </div>
 
         {/* Feeder Design */}
-        <div className="border rounded-md p-3 mb-3" style={{ flex: "3" }}>
+        <div className="border rounded-md p-3 mb-3 flex-grow">
           <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
           <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
             <Image
@@ -209,9 +212,9 @@ export default function FeederConfiguration({
         </div>
 
         {/* Dimensions Summary */}
-        <div className="border rounded-md p-3" style={{ flex: "2" }}>
+        <div className="border rounded-md p-3">
           <h2 className="text-lg font-medium mb-2">Dimensions Summary</h2>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
             {dimensions.map((dim) => (
               <div key={dim.id} className="border rounded-md p-1">
                 <div className="flex items-start">
@@ -232,7 +235,7 @@ export default function FeederConfiguration({
           </div>
         </div>
 
-        <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
+        <div className="text-center text-sm text-gray-500 mt-4">Generated on {getCurrentDate()}</div>
 
         {/* Dimension Input Dialog */}
         {currentDimension && (
@@ -245,7 +248,7 @@ export default function FeederConfiguration({
               }
             }}
           >
-            <div className="bg-white p-6 rounded-lg shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80 max-w-[90%]" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-bold mb-4">
                 Enter dimension {currentDimension}: {dimensionDescriptions[currentDimension]}
               </h3>
@@ -272,7 +275,7 @@ export default function FeederConfiguration({
 
       {/* Error Toast */}
       {showError && (
-        <div className="fixed bottom-12 right-16 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
+        <div className="fixed bottom-12 right-4 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
           {errorMessage}
         </div>
       )}

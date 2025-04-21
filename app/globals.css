@@ -55,6 +55,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -75,8 +83,8 @@
 }
 
 .print-container {
-  width: 210mm;
-  min-height: 297mm;
+  width: 100%;
+  max-width: 210mm;
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -86,5 +94,12 @@
     box-shadow: none;
     width: 100%;
     height: auto;
+  }
+}
+
+/* Ensure mobile responsiveness */
+@media (max-width: 640px) {
+  .print-container {
+    padding: 10px;
   }
 }

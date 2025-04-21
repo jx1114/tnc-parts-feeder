@@ -16,7 +16,7 @@ export default function NavigationBar({ items }: NavigationBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <nav className="bg-gray-800 text-white print:hidden">
+    <nav className="bg-gray-800 text-white print:hidden w-full">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">

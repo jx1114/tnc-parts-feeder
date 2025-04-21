@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <NavigationBar items={navItems} />
-        {children}
+        <main className="w-full max-w-full overflow-x-hidden">{children}</main>
       </body>
     </html>
   )
