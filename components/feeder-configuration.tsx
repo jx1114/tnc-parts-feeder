@@ -119,11 +119,8 @@ export default function FeederConfiguration({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-2 print:p-0 mx-auto">
-      <div
-        ref={printRef}
-        className="print-container flex flex-col h-auto min-h-[297mm] p-3 print:p-0 relative w-full max-w-full overflow-x-hidden"
-      >
+    <div className="min-h-screen flex flex-col items-center p-4 print:p-0 mx-auto light">
+      <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
         <button
           onClick={handlePrint}
           className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
@@ -136,7 +133,7 @@ export default function FeederConfiguration({
         {/* Machine Information */}
         <div className="border rounded-md p-3 mb-3">
           <h2 className="text-lg font-medium mb-2">Machine Information</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             {machineInfoFields.map((field) => (
               <div key={field.id}>
                 <label htmlFor={field.id} className="block mb-1 font-medium">
@@ -214,7 +211,7 @@ export default function FeederConfiguration({
         {/* Dimensions Summary */}
         <div className="border rounded-md p-3">
           <h2 className="text-lg font-medium mb-2">Dimensions Summary</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
+          <div className="grid grid-cols-4 gap-1">
             {dimensions.map((dim) => (
               <div key={dim.id} className="border rounded-md p-1">
                 <div className="flex items-start">
