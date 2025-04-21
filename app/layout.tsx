@@ -1,14 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import NavigationBar from "@/components/navigation-bar"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
-
 export const metadata: Metadata = {
-  title: "Feeder Configuration Report",
+  title: "Feeder Configuration Tool",
   description: "Machine part customization application",
 }
+
+// Define navigation items
+const navItems = [
+  { label: "Bowl Feeder", href: "/bowl-feeder" },
+  { label: "Linear Feeder", href: "/linear-feeder" },
+]
 
 export default function RootLayout({
   children,
@@ -16,8 +20,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="light">
-      <body className={`${inter.className} light`}>{children}</body>
+    <html lang="en">
+      <body>
+        <NavigationBar items={navItems} />
+        {children}
+      </body>
     </html>
   )
 }
