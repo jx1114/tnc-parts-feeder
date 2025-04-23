@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, type ReactNode } from "react"
+import { usePathname } from "next/navigation"
 
 type MachineInfo = Record<string, string>
 type Dimensions = Record<string, string>
@@ -11,7 +12,7 @@ type FeederData = {
 }
 
 type FormContextType = {
-  feederData: Record<string, FeederData>
+  feederData: Record<string, Record<string, FeederData>>
   currentFeederType: string
   nextFeederType: string
   previousFeederTypes: string[]
@@ -21,6 +22,7 @@ type FormContextType = {
   setCurrentFeederType: (feederType: string) => void
   setNextFeederType: (feederType: string) => void
   addPreviousFeederType: (feederType: string) => void
+  clearCurrentPageData: () => void
 }
 
 const defaultFeederData: FeederData = {
@@ -31,41 +33,134 @@ const defaultFeederData: FeederData = {
 const FormContext = createContext<FormContextType | undefined>(undefined)
 
 export function FormProvider({ children }: { children: ReactNode }) {
-  const [feederData, setFeederData] = useState<Record<string, FeederData>>({
+  // Initialize with empty data for each feeder type and path
+  const [feederData, setFeederData] = useState<Record<string, Record<string, FeederData>>>({
     "bowl-feeder": {
-      machineInfo: {
-        machineNo: "",
-        rotation: "",
-        uph: "",
+      "/single/bowl": {
+        machineInfo: {
+          machineNo: "",
+          rotation: "",
+          uph: "",
+        },
+        dimensions: {},
       },
-      dimensions: {},
+      "/set/set-a": {
+        machineInfo: {
+          machineNo: "",
+          rotation: "",
+          uph: "",
+        },
+        dimensions: {},
+      },
+      "/set/set-b": {
+        machineInfo: {
+          machineNo: "",
+          rotation: "",
+          uph: "",
+        },
+        dimensions: {},
+      },
+      "/set/set-c": {
+        machineInfo: {
+          machineNo: "",
+          rotation: "",
+          uph: "",
+        },
+        dimensions: {},
+      },
     },
     "linear-feeder": {
-      machineInfo: {
-        linearNo: "",
+      "/single/linear": {
+        machineInfo: {
+          machineNo: "",
+          linearNo: "",
+        },
+        dimensions: {},
       },
-      dimensions: {},
+      
     },
-   
+    hopper: {
+      "/single/hopper": {
+        machineInfo: {
+          machineNo: "",
+          hopperBinCapacity: "",
+        },
+        dimensions: {},
+      },
+      
+    },
+    
   })
 
   const [currentFeederType, setCurrentFeederType] = useState("bowl-feeder")
   const [nextFeederType, setNextFeederType] = useState("")
   const [previousFeederTypes, setPreviousFeederTypes] = useState<string[]>([])
 
+  const pathname = usePathname()
+
+  // Get the current page path or parent path for set pages
+  const getCurrentPagePath = () => {
+    if (pathname.includes("/set/")) {
+      // For set pages, use the set path (e.g., /set/set-a)
+      return pathname.split("/").slice(0, 3).join("/")
+    }
+    return pathname
+  }
+
   const getFeederData = (feederType: string): FeederData => {
-    return feederData[feederType] || { ...defaultFeederData }
+    const currentPath = getCurrentPagePath()
+
+    // If data exists for this feeder type and path, return it
+    if (feederData[feederType] && feederData[feederType][currentPath]) {
+      return feederData[feederType][currentPath]
+    }
+
+    // Otherwise return default data
+    return { ...defaultFeederData }
   }
 
   const updateFeederData = (feederType: string, data: FeederData) => {
-    setFeederData((prev) => ({
-      ...prev,
-      [feederType]: data,
-    }))
+    const currentPath = getCurrentPagePath()
+
+    setFeederData((prev) => {
+      // Create nested structure if it doesn't exist
+      const feederTypeData = prev[feederType] || {}
+
+      return {
+        ...prev,
+        [feederType]: {
+          ...feederTypeData,
+          [currentPath]: data,
+        },
+      }
+    })
   }
 
   const addPreviousFeederType = (feederType: string) => {
     setPreviousFeederTypes((prev) => [...prev, feederType])
+  }
+
+  // Clear data for the current page
+  const clearCurrentPageData = () => {
+    const currentPath = getCurrentPagePath()
+    const feederType = currentFeederType
+
+    if (feederData[feederType] && feederData[feederType][currentPath]) {
+      setFeederData((prev) => {
+        const updatedFeederTypeData = { ...prev[feederType] }
+
+        // Reset to empty data
+        updatedFeederTypeData[currentPath] = {
+          machineInfo: {},
+          dimensions: {},
+        }
+
+        return {
+          ...prev,
+          [feederType]: updatedFeederTypeData,
+        }
+      })
+    }
   }
 
   return (
@@ -80,6 +175,7 @@ export function FormProvider({ children }: { children: ReactNode }) {
         setCurrentFeederType,
         setNextFeederType,
         addPreviousFeederType,
+        clearCurrentPageData,
       }}
     >
       {children}

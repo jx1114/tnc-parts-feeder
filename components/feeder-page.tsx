@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
+import { RefreshCw } from "lucide-react"
 
 export type FeederPageProps = {
   title: string
@@ -41,7 +42,8 @@ export default function FeederPage({
     { id: "uph", label: "UPH", type: "number" },
   ],
 }: FeederPageProps) {
-  const { getFeederData, updateFeederData, setCurrentFeederType, setNextFeederType } = useFormContext()
+  const { getFeederData, updateFeederData, setCurrentFeederType, setNextFeederType, clearCurrentPageData } =
+    useFormContext()
   const feederData = getFeederData(feederType)
 
   const [currentDimension, setCurrentDimension] = useState<string | null>(null)
@@ -50,6 +52,10 @@ export default function FeederPage({
   const [errorMessage, setErrorMessage] = useState("")
   const printRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const pathname = usePathname()
+
+  // Check if this is a set page
+  const isSetPage = pathname.includes("/set/")
 
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
@@ -117,6 +123,14 @@ export default function FeederPage({
     }
   }
 
+  const handleClearData = () => {
+    clearCurrentPageData()
+    // Show confirmation message
+    setShowError(true)
+    setErrorMessage("Data cleared successfully!")
+    setTimeout(() => setShowError(false), 3000)
+  }
+
   const getCurrentDate = () => {
     const now = new Date()
     const day = String(now.getDate()).padStart(2, "0")
@@ -150,7 +164,7 @@ export default function FeederPage({
   return (
     <>
       <NavigationMenu />
-      <div className="min-h-screen flex flex-col items-center p-4 print:p-0 mx-auto light">
+      <div className="min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
           <button
             onClick={handlePrint}
@@ -265,17 +279,26 @@ export default function FeederPage({
 
           <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
 
-          {/* Navigation Buttons */}
-          {nextPageRoute && (
+          {/* Clear Data Button */}
+          <button
+            onClick={handleClearData}
+            className="absolute bottom-4 right-4 print:hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Clear Data
+          </button>
+
+          {/* Only show Next/Back buttons for non-set pages */}
+          {!isSetPage && nextPageRoute && (
             <button
               onClick={handleNext}
-              className="absolute bottom-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-md"
+              className="absolute bottom-4 right-32 print:hidden bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-md"
             >
               Next
             </button>
           )}
 
-          {previousPageRoute && (
+          {!isSetPage && previousPageRoute && (
             <button
               onClick={handleBack}
               className="absolute bottom-4 left-4 print:hidden bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-md"
@@ -316,9 +339,11 @@ export default function FeederPage({
           </div>
         )}
 
-        {/* Error Toast */}
+        {/* Error/Success Toast */}
         {showError && (
-          <div className="fixed bottom-12 right-16 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
+          <div
+            className={`fixed bottom-12 right-16 z-50 p-4 ${errorMessage.includes("cleared") ? "bg-green-50 border-2 border-green-500 text-green-600" : "bg-red-50 border-2 border-red-500 text-red-600"} rounded-md shadow-lg print:hidden max-w-xs`}
+          >
             {errorMessage}
           </div>
         )}
