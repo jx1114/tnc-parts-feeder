@@ -3,27 +3,58 @@
 import { useRouter } from "next/navigation"
 import NavigationMenu from "@/components/navigation-menu"
 import Image from "next/image"
+import { useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function WelcomePage() {
   const router = useRouter()
 
+  const images = [
+    
+    "/bowl-feeder.jpg",
+    "/rotary-feeder.jpg"
+  ]
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const prevImage = () => {
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+  }
+
+  const nextImage = () => {
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+  }
+
   return (
     <>
       <NavigationMenu />
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-red-900">
         <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="p-8">
-            <h1 className="text-3xl font-bold text-center mb-6">Welcome to TNC Feeder Configuration Tool</h1>
+            <h1 className="text-3xl font-bold text-center mb-6">
+              Welcome to TNC Feeder Configuration Tool
+            </h1>
 
             <div className="flex flex-col md:flex-row gap-8 mb-8">
-              <div className="flex-1">
+              <div className="flex-1 relative">
                 <Image
-                  src="/set-c.jpeg"
-                  alt="Feeder Configuration"
+                  src={images[currentIndex]}
+                  alt={`Feeder Image ${currentIndex + 1}`}
                   width={400}
                   height={300}
                   className="rounded-lg object-cover w-full h-auto"
                 />
+                <button
+                  onClick={prevImage}
+                  className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-90 text-gray-800 p-2 rounded-full shadow"
+                >
+                  <ChevronLeft />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-90 text-gray-800 p-2 rounded-full shadow"
+                >
+                  <ChevronRight />
+                </button>
               </div>
               <div className="flex-1 flex flex-col justify-center">
                 <p className="text-gray-700 mb-4">

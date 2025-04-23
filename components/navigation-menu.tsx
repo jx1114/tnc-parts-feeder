@@ -31,19 +31,19 @@ export default function NavigationMenu() {
   }
 
   return (
-    <div className="bg-gray-100 print:hidden">
+    <div className="bg-white-1000 print:hidden">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 cursor-pointer" onClick={() => router.push("/")}>
-              <span className="text-lg font-bold">TNC Feeder Configuration</span>
+              <span className="text-lg text-red-800 font-bold">TNC Feeder</span>
             </div>
           </div>
           <div className="flex items-center">
             {/* Home button */}
             <button
               onClick={() => router.push("/")}
-              className="px-4 py-2 mx-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 flex items-center"
+              className="px-4 py-2 mx-1 rounded-md bg-red-800 hover:bg-black text-white flex items-center"
             >
               <Home className="mr-1 h-4 w-4" />
               Home
@@ -53,7 +53,7 @@ export default function NavigationMenu() {
             <div className="relative">
               <button
                 onClick={toggleSingleDropdown}
-                className="px-4 py-2 mx-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 flex items-center"
+                className="px-4 py-2 mx-1 rounded-md bg-red-800 hover:bg-black text-white flex items-center"
               >
                 Single
                 <ChevronDown className="ml-1 h-4 w-4" />
@@ -88,7 +88,7 @@ export default function NavigationMenu() {
             <div className="relative">
               <button
                 onClick={toggleSetDropdown}
-                className="px-4 py-2 mx-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 flex items-center"
+                className="px-4 py-2 mx-1 rounded-md bg-red-800 hover:bg-black text-white flex items-center"
               >
                 Set
                 <ChevronDown className="ml-1 h-4 w-4" />
