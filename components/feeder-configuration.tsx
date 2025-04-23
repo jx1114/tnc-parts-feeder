@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+
 
 // Define types for the component props
 export interface MachineInfoField {
@@ -47,6 +49,7 @@ export default function FeederConfiguration({
   const [errorMessage, setErrorMessage] = useState("")
 
   const printRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   // Create a map of dimension descriptions for easy access
   const dimensionDescriptions = dimensions.reduce(
@@ -106,6 +109,7 @@ export default function FeederConfiguration({
     window.print()
   }
 
+  
   // Format current date as DD/MM/YYYY
   const getCurrentDate = () => {
     const now = new Date()
@@ -233,7 +237,8 @@ export default function FeederConfiguration({
         </div>
 
         <div className="text-center text-sm text-gray-500 mt-4">Generated on {getCurrentDate()}</div>
-
+        
+        
         {/* Dimension Input Dialog */}
         {currentDimension && (
           <div
