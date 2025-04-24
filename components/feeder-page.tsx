@@ -2,11 +2,12 @@
 
 import { useState, useRef } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter,usePathname } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
 import { Axis3dIcon as View3D } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 
 export type FeederPageProps = {
   title: string
@@ -55,6 +56,10 @@ export default function FeederPage({
   const [showModelViewer, setShowModelViewer] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const pathname = usePathname()
+
+  // Check if this is a set page
+  const isSetPage = pathname.includes("/set/")
 
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
@@ -64,6 +69,13 @@ export default function FeederPage({
     return machineInfoFields.every((field) => {
       const value = feederData.machineInfo[field.id]
       return value !== undefined && value.trim() !== ""
+    })
+  }
+
+  const clearCurrentPageData = () => {
+    updateFeederData(feederType, {
+      dimensions: {},
+      machineInfo: {},
     })
   }
 
@@ -120,6 +132,14 @@ export default function FeederPage({
     if (previousPageRoute) {
       router.push(previousPageRoute)
     }
+  }
+
+  const handleClearData = () => {
+    clearCurrentPageData()
+    // Show confirmation message
+    setShowError(true)
+    setErrorMessage("Data cleared successfully!")
+    setTimeout(() => setShowError(false), 3000)
   }
 
   const getCurrentDate = () => {
@@ -279,6 +299,15 @@ export default function FeederPage({
 
           <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
 
+          {/* Clear Data Button */}
+          <button
+            onClick={handleClearData}
+            className="absolute bottom-4 right-4 print:hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Clear Data
+          </button>
+
           {/* Navigation Buttons */}
           {nextPageRoute && (
             <button
@@ -335,7 +364,7 @@ export default function FeederPage({
 
         {/* Error Toast */}
         {showError && (
-          <div className="fixed bottom-12 right-16 z-50 p-4 bg-red-50 border-2 border-red-500 text-red-600 rounded-md shadow-lg print:hidden max-w-xs">
+          <div className={`fixed bottom-12 right-16 z-50 p-4 ${errorMessage.includes("cleared") ? "bg-green-50 border-2 border-green-500 text-green-600" : "bg-red-50 border-2 border-red-500 text-red-600"} rounded-md shadow-lg print:hidden max-w-xs`}>
             {errorMessage}
           </div>
         )}
