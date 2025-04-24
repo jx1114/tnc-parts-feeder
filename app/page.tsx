@@ -10,7 +10,7 @@ export default function WelcomePage() {
   const router = useRouter()
 
   const images = [
-    
+    "/aluminium-bowl-feeder.jpg",
     "/bowl-feeder.jpg",
     "/rotary-feeder.jpg"
   ]
@@ -70,9 +70,9 @@ export default function WelcomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-2">Single Feeders</h2>
-                <p className="text-gray-600 mb-4">Configure individual feeder types:</p>
+              <div className="bg-black rounded-lg p-6">
+                <h2 className="text-xl text-white font-semibold mb-2">Single Feeders</h2>
+                <p className="text-white mb-4">Configure individual feeder types:</p>
                 <div className="space-y-2">
                   <button
                     onClick={() => router.push("/single/bowl")}
@@ -94,9 +94,9 @@ export default function WelcomePage() {
                   </button>
                 </div>
               </div>
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-2">Feeder Sets</h2>
-                <p className="text-gray-600 mb-4">Configure predefined combinations of feeders:</p>
+              <div className="bg-black rounded-lg p-6">
+                <h2 className="text-xl text-white font-semibold mb-2">Feeder Sets</h2>
+                <p className="text-white mb-4">Configure predefined combinations of feeders:</p>
                 <div className="space-y-2">
                   <button
                     onClick={() => router.push("/set/set-a")}
