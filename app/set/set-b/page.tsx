@@ -28,7 +28,7 @@ export default function setBPage() {
   return (
     <FeederPage
       title="Set B Configuration"
-      feederType="bowl-feeder"
+      feederType="linear" //later will change
       imageSrc="/set-b.jpg"
       dimensionDescriptions={setBDimensionDescriptions}
       dimensionPositions={setBDimensionPositions}

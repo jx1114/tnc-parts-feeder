@@ -44,7 +44,7 @@ export default function setCPage() {
   return (
     <FeederPage
       title="Set C Configuration"
-      feederType="bowl-feeder"
+      feederType="linear" //later will change
       imageSrc="/set-c.jpeg"
       dimensionDescriptions={setCDimensionDescriptions}
       dimensionPositions={setCDimensionPositions}

@@ -69,7 +69,7 @@ export function FormProvider({ children }: { children: ReactNode }) {
         dimensions: {},
       },
     },
-    "linear-feeder": {
+    "linear": {
       "/single/linear": {
         machineInfo: {
           machineNo: "",

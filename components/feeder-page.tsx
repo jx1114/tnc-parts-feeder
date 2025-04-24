@@ -6,11 +6,14 @@ import Image from "next/image"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
 import { RefreshCw } from "lucide-react"
+import ModelViewer from "./model-viewer"
+import { Axis3dIcon as View3D } from "lucide-react"
 
 export type FeederPageProps = {
   title: string
   feederType: string
   imageSrc: string
+  modelPath?: string
   dimensionDescriptions: Record<string, string>
   dimensionPositions: Record<string, { x: number; y: number }>
   nextPageRoute?: string
@@ -27,6 +30,7 @@ export default function FeederPage({
   title,
   feederType,
   imageSrc,
+  modelPath = `/models/${feederType}.glb`,
   dimensionDescriptions,
   dimensionPositions,
   nextPageRoute,
@@ -50,6 +54,7 @@ export default function FeederPage({
   const [dimensionValue, setDimensionValue] = useState("")
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  const [showModelViewer, setShowModelViewer] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
@@ -219,6 +224,13 @@ export default function FeederPage({
           {/* Feeder Design Section */}
           <div className="border rounded-md p-3 mb-3" style={{ flex: "3" }}>
             <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
+            <button
+                onClick={() => setShowModelViewer(true)}
+                className="flex items-center gap-1 bg-black text-white px-3 py-1 rounded-md text-sm print:hidden"
+              >
+                <View3D size={16} />
+                <span>View 3D Model</span>
+            </button>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
                 src={imageSrc || "/placeholder.svg"}
@@ -338,6 +350,9 @@ export default function FeederPage({
             </div>
           </div>
         )}
+
+        {/* 3D Model Viewer */}
+        <ModelViewer modelPath={modelPath} isOpen={showModelViewer} onClose={() => setShowModelViewer(false)} />
 
         {/* Error/Success Toast */}
         {showError && (

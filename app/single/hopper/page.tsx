@@ -26,7 +26,7 @@ export default function hopperPage() {
   return (
     <FeederPage
       title="Hopper Configuration"
-      feederType="hopper"
+      feederType="linear" //later will change
       imageSrc="/hopper.jpg"
       dimensionDescriptions={hopperDimensionDescriptions}
       dimensionPositions={hopperDimensionPositions}

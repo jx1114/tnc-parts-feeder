@@ -75,7 +75,7 @@ export default function LinearPage() {
     
       <FeederPage
         title="Linear Configuration"
-        feederType="linear-feeder"
+        feederType="linear"
         imageSrc="/linear.jpg" 
         dimensionDescriptions={linearDimensionDescriptions}
         dimensionPositions={linearDimensionPositions}

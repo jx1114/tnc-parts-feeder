@@ -26,7 +26,7 @@ export default function BowlFeederPage() {
   return (
     <FeederPage
       title="Bowl Feeder Configuration"
-      feederType="bowl-feeder"
+      feederType="linear" //later will change
       imageSrc="/bowl.jpeg"
       dimensionDescriptions={bowlFeederDimensionDescriptions}
       dimensionPositions={bowlFeederDimensionPositions}
