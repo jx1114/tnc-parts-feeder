@@ -1,60 +1,72 @@
 "use client"
 
 import { useState, useRef, useEffect, Suspense } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, useGLTF, Environment, PerspectiveCamera } from "@react-three/drei"
 import { X } from "lucide-react"
 import * as THREE from "three"
+
+// Hook to detect mobile screen
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  return isMobile
+}
 
 type ModelViewerProps = {
   modelPath: string
   isOpen: boolean
   onClose: () => void
-  onLoad: () => void;
+  onLoad: () => void
 }
 
 function Model({ modelPath, onLoaded }: { modelPath: string; onLoaded: () => void }) {
-    const { scene } = useGLTF(modelPath, true, undefined, () => {
-      onLoaded()
-    })
-    const modelRef = useRef<THREE.Group>(null)
-  
-    // Define scales for each model
-    const getScaleByModelPath = (path: string) => {
-      if (path.includes("bowl")) return 0.005
-      if (path.includes("linear")) return 0.015
-      if (path.includes("hopper")) return 0.004
-      if (path.includes("set-c")) return 0.005
-      // add more models here later
-      return 0.01 // default scale
-    }
-  
-    const scale = getScaleByModelPath(modelPath)
-  
-    useEffect(() => {
-      if (modelRef.current) {
-        const box = new THREE.Box3().setFromObject(modelRef.current)
-        const center = box.getCenter(new THREE.Vector3())
-        modelRef.current.position.sub(center) // Center the model
-      }
-    }, [])
-  
-    useFrame(() => {
-      if (modelRef.current) {
-        modelRef.current.rotation.y += 0.002
-      }
-    })
-  
-    return (
-      <group ref={modelRef}>
-        <primitive object={scene} scale={scale} />
-      </group>
-    )
+  const { scene } = useGLTF(modelPath, true, undefined, () => {
+    onLoaded()
+  })
+  const modelRef = useRef<THREE.Group>(null)
+
+  const getScaleByModelPath = (path: string) => {
+    if (path.includes("bowl")) return 0.005
+    if (path.includes("linear")) return 0.015
+    if (path.includes("hopper")) return 0.004
+    if (path.includes("set-c")) return 0.005
+    return 0.01 // default scale
   }
-  
+
+  const scale = getScaleByModelPath(modelPath)
+
+  useEffect(() => {
+    if (modelRef.current) {
+      const box = new THREE.Box3().setFromObject(modelRef.current)
+      const center = box.getCenter(new THREE.Vector3())
+      modelRef.current.position.sub(center) // Center the model
+    }
+  }, [])
+
+  useFrame(() => {
+    if (modelRef.current) {
+      modelRef.current.rotation.y += 0.002
+    }
+  })
+
+  return (
+    <group ref={modelRef}>
+      <primitive object={scene} scale={scale} />
+    </group>
+  )
+}
 
 export default function ModelViewer({ modelPath, isOpen, onClose }: ModelViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
+  const isMobile = useIsMobile()
 
   if (!isOpen) return null
 
@@ -71,12 +83,16 @@ export default function ModelViewer({ modelPath, isOpen, onClose }: ModelViewerP
 
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="text-lg font-medium"></div>
+            <div className="text-lg font-medium">Loading...</div>
           </div>
         )}
 
         <Canvas shadows className="w-full h-full">
-          <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={50} />
+          <PerspectiveCamera
+            makeDefault
+            position={isMobile ? [0, 0, 8] : [0, 0, 5]} // farther for mobile
+            fov={isMobile ? 60 : 50}                   // wider field for mobile
+          />
           <ambientLight intensity={0.5} />
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
           <Suspense fallback={null}>
