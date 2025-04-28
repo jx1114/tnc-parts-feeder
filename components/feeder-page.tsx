@@ -175,7 +175,7 @@ export default function FeederPage({
   return (
     <>
       <NavigationMenu />
-      <div className="min-h-screen flex flex-col items-center p-4 print:p-0 mx-auto light">
+      <div className="min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
           <button
             onClick={handlePrint}
