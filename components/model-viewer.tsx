@@ -10,6 +10,7 @@ type ModelViewerProps = {
   modelPath: string
   isOpen: boolean
   onClose: () => void
+  onLoad: () => void;
 }
 
 function Model({ modelPath, onLoaded }: { modelPath: string; onLoaded: () => void }) {
@@ -22,7 +23,8 @@ function Model({ modelPath, onLoaded }: { modelPath: string; onLoaded: () => voi
     const getScaleByModelPath = (path: string) => {
       if (path.includes("bowl")) return 0.005
       if (path.includes("linear")) return 0.015
-      if (path.includes("hopper")) return 0.01
+      if (path.includes("hopper")) return 0.004
+      if (path.includes("set-c")) return 0.005
       // add more models here later
       return 0.01 // default scale
     }
@@ -69,7 +71,7 @@ export default function ModelViewer({ modelPath, isOpen, onClose }: ModelViewerP
 
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="text-lg font-medium">Loading 3D Model...</div>
+            <div className="text-lg font-medium"></div>
           </div>
         )}
 

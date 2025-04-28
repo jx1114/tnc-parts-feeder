@@ -32,7 +32,7 @@ export default function setAPage() {
   return (
     <FeederPage
       title="Set A Configuration"
-      feederType="linear" //later will change
+      feederType="set-a" //later will change
       imageSrc="/set-a.jpg"
       dimensionDescriptions={setADimensionDescriptions}
       dimensionPositions={setADimensionPositions}

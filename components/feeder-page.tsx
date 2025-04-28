@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
-import { useRouter,usePathname } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
-import { Axis3dIcon as View3D } from "lucide-react"
 import { RefreshCw } from "lucide-react"
 
 export type FeederPageProps = {
@@ -53,13 +52,10 @@ export default function FeederPage({
   const [dimensionValue, setDimensionValue] = useState("")
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
-  const [showModelViewer, setShowModelViewer] = useState(false)
+  const [showModelViewer, setShowModelViewer] = useState(false) // <== New
   const printRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
-
-  // Check if this is a set page
-  const isSetPage = pathname.includes("/set/")
 
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
@@ -86,38 +82,26 @@ export default function FeederPage({
 
   const handlePrint = () => {
     if (!machineInfoComplete()) {
-      setShowError(true)
-      setErrorMessage("Please fill in all machine information before printing.")
-      setTimeout(() => setShowError(false), 5000)
+      showTempError("Please fill in all machine information before printing.")
       return
     }
-
     if (!allDimensionsFilled()) {
-      setShowError(true)
-      setErrorMessage("Please fill in all dimensions before printing.")
-      setTimeout(() => setShowError(false), 5000)
+      showTempError("Please fill in all dimensions before printing.")
       return
     }
-
     setShowError(false)
     window.print()
   }
 
   const handleNext = () => {
     if (!machineInfoComplete()) {
-      setShowError(true)
-      setErrorMessage("Please fill in all machine information before proceeding.")
-      setTimeout(() => setShowError(false), 5000)
+      showTempError("Please fill in all machine information before proceeding.")
       return
     }
-
     if (!allDimensionsFilled()) {
-      setShowError(true)
-      setErrorMessage("Please fill in all dimensions before proceeding.")
-      setTimeout(() => setShowError(false), 5000)
+      showTempError("Please fill in all dimensions before proceeding.")
       return
     }
-
     if (nextPageRoute) {
       setCurrentFeederType(feederType)
       if (nextPageRoute.includes("/")) {
@@ -136,10 +120,13 @@ export default function FeederPage({
 
   const handleClearData = () => {
     clearCurrentPageData()
-    // Show confirmation message
+    showTempError("Data cleared successfully!", true)
+  }
+
+  const showTempError = (message: string, isSuccess = false) => {
     setShowError(true)
-    setErrorMessage("Data cleared successfully!")
-    setTimeout(() => setShowError(false), 3000)
+    setErrorMessage(message)
+    setTimeout(() => setShowError(false), isSuccess ? 3000 : 5000)
   }
 
   const getCurrentDate = () => {
@@ -172,11 +159,20 @@ export default function FeederPage({
     })
   }
 
+  // === New Effect to show ModelViewer when all info is filled ===
+  useEffect(() => {
+    if (machineInfoComplete() && allDimensionsFilled()) {
+      setShowModelViewer(true)
+    }
+  }, [feederData])
+
   return (
     <>
       <NavigationMenu />
       <div className="min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
+
+          {/* Save as PDF button */}
           <button
             onClick={handlePrint}
             className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
@@ -186,29 +182,23 @@ export default function FeederPage({
 
           <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
 
-          {/* Machine Info Section */}
-          <div className="border rounded-md p-3 mb-3" style={{ flex: "1" }}>
+          {/* Machine Information Section */}
+          <div className="border rounded-md p-3 mb-3">
             <h2 className="text-lg font-medium mb-2">Machine Information</h2>
             <div className="grid grid-cols-3 gap-4">
               {machineInfoFields.map((field) => (
                 <div key={field.id}>
-                  <label htmlFor={field.id} className="block mb-1 font-medium">
-                    {field.label}
-                  </label>
+                  <label htmlFor={field.id} className="block mb-1 font-medium">{field.label}</label>
                   {field.type === "select" ? (
                     <select
                       id={field.id}
                       value={feederData.machineInfo[field.id] || ""}
                       onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                      className={`w-full border rounded-md px-3 py-2 ${
-                        !feederData.machineInfo[field.id] ? "border-red-500" : ""
-                      }`}
+                      className={`w-full border rounded-md px-3 py-2 ${!feederData.machineInfo[field.id] ? "border-red-500" : ""}`}
                     >
                       <option value="">Select</option>
                       {field.options?.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
+                        <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
                   ) : (
@@ -217,9 +207,7 @@ export default function FeederPage({
                       type={field.type}
                       value={feederData.machineInfo[field.id] || ""}
                       onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                      className={`w-full border rounded-md px-3 py-2 ${
-                        !feederData.machineInfo[field.id] ? "border-red-500" : ""
-                      }`}
+                      className={`w-full border rounded-md px-3 py-2 ${!feederData.machineInfo[field.id] ? "border-red-500" : ""}`}
                     />
                   )}
                 </div>
@@ -228,17 +216,8 @@ export default function FeederPage({
           </div>
 
           {/* Feeder Design Section */}
-          <div className="border rounded-md p-3 mb-3" style={{ flex: "3" }}>
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-medium">Feeder Design</h2>
-              <button
-                onClick={() => setShowModelViewer(true)}
-                className="flex items-center gap-1 bg-black text-white px-3 py-1 rounded-md text-sm print:hidden"
-              >
-                <View3D size={16} />
-                <span>View 3D Model</span>
-              </button>
-            </div>
+          <div className="border rounded-md p-4 flex-grow mb-3">
+            <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
                 src={imageSrc || "/placeholder.svg"}
@@ -252,9 +231,7 @@ export default function FeederPage({
                   key={dim}
                   onClick={() => handleDimensionClick(dim)}
                   className={`absolute text-xs flex items-center justify-center ${
-                    feederData.dimensions[dim]
-                      ? "bg-white border-none text-black"
-                      : "bg-white border border-red-500 text-red-500"
+                    feederData.dimensions[dim] ? "bg-white border-none text-black" : "bg-white border border-red-500 text-red-500"
                   }`}
                   style={{
                     left: `${x}%`,
@@ -271,35 +248,9 @@ export default function FeederPage({
             </div>
           </div>
 
-          {/* Dimensions Summary */}
-          <div className="border rounded-md p-3" style={{ flex: "2" }}>
-            <h2 className="text-lg font-medium mb-2">Dimensions Summary</h2>
-            <div className="grid grid-cols-4 gap-1">
-              {Object.keys(dimensionDescriptions).map((dim) => (
-                <div key={dim} className="border rounded-md p-1">
-                  <div className="flex items-start">
-                    <span
-                      className={
-                        feederData.dimensions[dim] ? "font-bold text-black mr-1" : "font-bold text-red-500 mr-1"
-                      }
-                    >
-                      {dim}
-                    </span>
-                    <span className="text-right text-xs text-gray-500 ml-auto truncate" style={{ fontSize: "9px" }}>
-                      {dimensionDescriptions[dim]}
-                    </span>
-                  </div>
-                  <div className={`${feederData.dimensions[dim] ? "text-black" : "text-red-500"} text-xs`}>
-                    {feederData.dimensions[dim] ? `${feederData.dimensions[dim]} mm` : "--------"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
 
-          {/* Clear Data Button */}
+          {/* Buttons */}
           <button
             onClick={handleClearData}
             className="absolute bottom-4 right-4 print:hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
@@ -308,7 +259,6 @@ export default function FeederPage({
             Clear Data
           </button>
 
-          {/* Navigation Buttons */}
           {nextPageRoute && (
             <button
               onClick={handleNext}
@@ -328,7 +278,7 @@ export default function FeederPage({
           )}
         </div>
 
-        {/* Input Dimension Dialog */}
+        {/* Dimension Input Dialog */}
         {currentDimension && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
             <div className="bg-white p-6 rounded-lg shadow-lg w-80">
@@ -338,18 +288,19 @@ export default function FeederPage({
               <input
                 type="number"
                 value={dimensionValue}
-                onChange={(e) => {
-                  const newValue = e.target.value
-                  setDimensionValue(newValue)
-                  updateDimension(currentDimension, newValue)
-                }}
+                onChange={(e) => setDimensionValue(e.target.value)}
                 placeholder="Enter value in mm"
                 autoFocus
                 className="w-full border rounded-md px-3 py-2 mb-4"
               />
               <div className="flex justify-end">
                 <button
-                  onClick={() => setCurrentDimension(null)}
+                  onClick={() => {
+                    if (dimensionValue.trim() !== "") {
+                      updateDimension(currentDimension, dimensionValue)
+                    }
+                    setCurrentDimension(null)
+                  }}
                   className="px-4 py-2 border rounded-md hover:bg-gray-100"
                 >
                   Close
@@ -359,13 +310,30 @@ export default function FeederPage({
           </div>
         )}
 
-        {/* 3D Model Viewer */}
-        <ModelViewer modelPath={modelPath} isOpen={showModelViewer} onClose={() => setShowModelViewer(false)} />
-
         {/* Error Toast */}
         {showError && (
-          <div className={`fixed bottom-12 right-16 z-50 p-4 ${errorMessage.includes("cleared") ? "bg-green-50 border-2 border-green-500 text-green-600" : "bg-red-50 border-2 border-red-500 text-red-600"} rounded-md shadow-lg print:hidden max-w-xs`}>
+          <div className={`fixed bottom-12 right-16 z-50 p-4 ${errorMessage.includes("cleared") ? "bg-green-50 border-green-500 text-green-600" : "bg-red-50 border-red-500 text-red-600"} rounded-md shadow-lg print:hidden max-w-xs`}>
             {errorMessage}
+          </div>
+        )}
+
+        {/* Model Viewer Popup */}
+        {showModelViewer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg w-[800px] h-[600px] relative">
+            <ModelViewer 
+                modelPath={modelPath} 
+                isOpen={showModelViewer} 
+                onClose={() => setShowModelViewer(false)}
+                onLoad={() => {}} 
+                />
+              <button
+                onClick={() => setShowModelViewer(false)}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm"
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>
