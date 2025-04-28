@@ -280,35 +280,39 @@ export default function FeederPage({
 
         {/* Dimension Input Dialog */}
         {currentDimension && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-              <h3 className="text-lg font-bold mb-4">
-                Enter dimension {currentDimension}: {dimensionDescriptions[currentDimension]}
-              </h3>
-              <input
-                type="number"
-                value={dimensionValue}
-                onChange={(e) => setDimensionValue(e.target.value)}
-                placeholder="Enter value in mm"
-                autoFocus
-                className="w-full border rounded-md px-3 py-2 mb-4"
-              />
-              <div className="flex justify-end">
-                <button
-                  onClick={() => {
-                    if (dimensionValue.trim() !== "") {
-                      updateDimension(currentDimension, dimensionValue)
-                    }
-                    setCurrentDimension(null)
-                  }}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+      <h3 className="text-lg font-bold mb-4">
+        Enter dimension {currentDimension}: {dimensionDescriptions[currentDimension]}
+      </h3>
+      <input
+        type="number"
+        value={dimensionValue}
+        onChange={(e) => setDimensionValue(e.target.value)}
+        placeholder="Enter value in mm"
+        autoFocus
+        className="w-full border rounded-md px-3 py-2 mb-4"
+      />
+      <div className="flex justify-end">
+        <button
+          onClick={() => {
+            const trimmedValue = dimensionValue.trim()
+            if (trimmedValue !== "") {
+              updateDimension(currentDimension, trimmedValue)
+            } else {
+              updateDimension(currentDimension, "") // <== Important fix
+            }
+            setCurrentDimension(null)
+          }}
+          className="px-4 py-2 border rounded-md hover:bg-gray-100"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
         {/* Error Toast */}
         {showError && (

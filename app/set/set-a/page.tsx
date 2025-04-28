@@ -19,7 +19,7 @@ const setADimensionPositions: Record<string, { x: number; y: number }> = {
     A: { x: 31.2, y: 8 },
     B: { x: 19.2, y: 20 },
     C: { x: 21.1, y: 39.5 },
-    D: { x: 22.9, y: 53 },
+    D: { x: 22.9, y: 53.5 },
     E: { x: 45.4, y: 29.5 },
     F: { x: 30.1, y: 52 },
     G: { x: 21, y: 75.1 },
