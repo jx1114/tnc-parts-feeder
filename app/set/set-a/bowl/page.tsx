@@ -17,6 +17,8 @@ const bowlFeederDimensionPositions: Record<string, { x: number; y: number }> = {
   C: { x: 19.1, y: 51.4 },
 }
 
+
+
 // Configuration for both feeder types for printing
 const dimensionConfigs = {
   "bowl-feeder": {
@@ -54,6 +56,7 @@ export default function SetAPage() {
           imageSrc="/bowl.jpeg"
           dimensionDescriptions={bowlFeederDimensionDescriptions}
           dimensionPositions={bowlFeederDimensionPositions}
+          
           nextPageRoute="/set/set-a/linear"
           machineInfoFields={[
             { id: "machineNo", label: "Machine No.", type: "text" },

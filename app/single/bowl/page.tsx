@@ -22,6 +22,7 @@ const bowlFeederDimensionPositions: Record<string, { x: number; y: number }> = {
     F: { x: 39.5, y:77}
 }
 
+
 export default function BowlFeederPage() {
   return (
     <FeederPage
@@ -30,6 +31,7 @@ export default function BowlFeederPage() {
       imageSrc="/bowl.jpeg"
       dimensionDescriptions={bowlFeederDimensionDescriptions}
       dimensionPositions={bowlFeederDimensionPositions}
+      
       machineInfoFields={[
         { id: "machineNo", label: "Machine No.", type: "text" },
         {

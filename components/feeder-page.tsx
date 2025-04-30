@@ -8,6 +8,7 @@ import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
 import { RefreshCw } from "lucide-react"
 
+
 export type FeederPageProps = {
   title: string
   feederType: string
@@ -52,7 +53,9 @@ export default function FeederPage({
   const [dimensionValue, setDimensionValue] = useState("")
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
-  const [showModelViewer, setShowModelViewer] = useState(false) // <== New
+  const [showModelViewer, setShowModelViewer] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showFireworks, setShowFireworks] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
@@ -123,6 +126,19 @@ export default function FeederPage({
     showTempError("Data cleared successfully!", true)
   }
 
+  const handleOkClick = () => {
+    if (!machineInfoComplete()) {
+      showTempError("Please fill in all machine information before continuing.")
+      return
+    }
+    if (!allDimensionsFilled()) {
+      showTempError("Please fill in all dimensions before continuing.")
+      return
+    }
+
+    setShowSuccessModal(true)
+}
+
   const showTempError = (message: string, isSuccess = false) => {
     setShowError(true)
     setErrorMessage(message)
@@ -159,20 +175,11 @@ export default function FeederPage({
     })
   }
 
-  // === New Effect to show ModelViewer when all info is filled ===
-  useEffect(() => {
-    if (machineInfoComplete() && allDimensionsFilled()) {
-      setShowModelViewer(true)
-    }
-  }, [feederData])
-
   return (
     <>
       <NavigationMenu />
-      <div className="min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
+      <div className="bg-[#fdf5e6] min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
-
-          {/* Save as PDF button */}
           <button
             onClick={handlePrint}
             className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
@@ -182,8 +189,8 @@ export default function FeederPage({
 
           <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
 
-          {/* Machine Information Section */}
-          <div className="border rounded-md p-3 mb-3">
+          {/* Machine Information */}
+          <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
             <h2 className="text-lg font-medium mb-2">Machine Information</h2>
             <div className="grid grid-cols-3 gap-4">
               {machineInfoFields.map((field) => (
@@ -215,8 +222,8 @@ export default function FeederPage({
             </div>
           </div>
 
-          {/* Feeder Design Section */}
-          <div className="border rounded-md p-4 flex-grow mb-3">
+          {/* Feeder Design */}
+          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3">
             <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
@@ -246,18 +253,30 @@ export default function FeederPage({
                 </button>
               ))}
             </div>
+
+            {/* OK Button */}
+            <div className="mt-4 flex justify-end space-x-2 print:hidden">
+              
+
+              <button
+                    onClick={handleClearData}
+                    className="bg-white border border-black text-black  px-4 py-2 rounded-md flex items-center"
+                >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Clear Data
+                </button>
+
+                <button
+                onClick={handleOkClick}
+                className="bg-black text-white px-4 py-2 rounded-md"
+              >
+                OK
+              </button>
+            </div>
           </div>
 
           <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
 
-          {/* Buttons */}
-          <button
-            onClick={handleClearData}
-            className="absolute bottom-4 right-4 print:hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Clear Data
-          </button>
 
           {nextPageRoute && (
             <button
@@ -278,41 +297,40 @@ export default function FeederPage({
           )}
         </div>
 
-        {/* Dimension Input Dialog */}
+        {/* Input Dialog */}
         {currentDimension && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-      <h3 className="text-lg font-bold mb-4">
-        Enter dimension {currentDimension}: {dimensionDescriptions[currentDimension]}
-      </h3>
-      <input
-        type="number"
-        value={dimensionValue}
-        onChange={(e) => setDimensionValue(e.target.value)}
-        placeholder="Enter value in mm"
-        autoFocus
-        className="w-full border rounded-md px-3 py-2 mb-4"
-      />
-      <div className="flex justify-end">
-        <button
-          onClick={() => {
-            const trimmedValue = dimensionValue.trim()
-            if (trimmedValue !== "") {
-              updateDimension(currentDimension, trimmedValue)
-            } else {
-              updateDimension(currentDimension, "") // <== Important fix
-            }
-            setCurrentDimension(null)
-          }}
-          className="px-4 py-2 border rounded-md hover:bg-gray-100"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+              <h3 className="text-lg font-bold mb-4">
+                Enter dimension {currentDimension}: {dimensionDescriptions[currentDimension]}
+              </h3>
+              <input
+                type="number"
+                value={dimensionValue}
+                onChange={(e) => setDimensionValue(e.target.value)}
+                placeholder="Enter value in mm"
+                autoFocus
+                className="w-full border rounded-md px-3 py-2 mb-4"
+              />
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    const trimmedValue = dimensionValue.trim()
+                    if (trimmedValue !== "") {
+                      updateDimension(currentDimension, trimmedValue)
+                    } else {
+                      updateDimension(currentDimension, "")
+                    }
+                    setCurrentDimension(null)
+                  }}
+                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error Toast */}
         {showError && (
@@ -321,16 +339,56 @@ export default function FeederPage({
           </div>
         )}
 
-        {/* Model Viewer Popup */}
+{showSuccessModal && (
+  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center print:hidden">
+    <div className="relative bg-white p-6 rounded-lg w-[500px] shadow-lg text-center">
+      {/* Close Button as X */}
+      <button
+        onClick={() => setShowSuccessModal(false)}
+        className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+
+      <h2 className="text-2xl font-bold mb-4">Congratulations! 🎊</h2>
+      
+
+      {/* Looping video */}
+      <video
+        src={`/hopper.mp4`}  ///${feederType}.mp4
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full rounded-md mb-4"
+      />
+
+      {/* View 3D button only */}
+      <button
+        onClick={() => {
+          setShowSuccessModal(false)
+          setShowModelViewer(true)
+        }}
+        className="bg-black text-white px-6 py-2 rounded-md"
+      >
+        View 3D
+      </button>
+    </div>
+  </div>
+)}
+
+        {/* Model Viewer */}
         {showModelViewer && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
             <div className="bg-white rounded-lg overflow-hidden shadow-lg w-[800px] h-[600px] relative">
-            <ModelViewer 
-                modelPath={modelPath} 
-                isOpen={showModelViewer} 
+              <ModelViewer
+                modelPath={modelPath}
+                isOpen={showModelViewer}
                 onClose={() => setShowModelViewer(false)}
-                onLoad={() => {}} 
-                />
+                onLoad={() => {}}
+                dimensions={feederData.dimensions}
+              />
               <button
                 onClick={() => setShowModelViewer(false)}
                 className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm"
