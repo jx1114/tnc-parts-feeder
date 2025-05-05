@@ -60,6 +60,33 @@ export default function FeederPage({
   const router = useRouter()
   const pathname = usePathname()
 
+  const [isAnimating, setIsAnimating] = useState(false)
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    const resetTimer = () => {
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current)
+      }
+      inactivityTimer.current = setTimeout(() => {
+        setIsAnimating(true)
+        setTimeout(() => setIsAnimating(false), 1000)
+      }, 1000)
+    }
+
+    const events = ["mousemove", "keydown", "mousedown", "touchstart"]
+    events.forEach((event) => window.addEventListener(event, resetTimer))
+
+    resetTimer()
+
+    return () => {
+      events.forEach((event) => window.removeEventListener(event, resetTimer))
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current)
+      }
+    }
+  }, [])
+
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
   }
@@ -187,7 +214,7 @@ export default function FeederPage({
             Save as PDF
           </button>
 
-          <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
+          <h1 className={`text-2xl font-bold text-center mb-4 ${isAnimating ? "animate-fall" : ""}`}>{title}</h1>
 
           {/* Machine Information */}
           <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
@@ -400,6 +427,24 @@ export default function FeederPage({
           </div>
         )}
       </div>
+
+      <style jsx>{`
+            @keyframes fallDown {
+              0% {
+                transform: translateY(0);
+              }
+              50% {
+                transform: translateY(20px);
+              }
+              100% {
+                transform: translateY(0);
+              }
+            }
+
+            .animate-fall {
+              animation: fallDown 1s ease-in-out;
+            }
+          `}</style>
     </>
   )
 }

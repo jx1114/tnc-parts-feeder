@@ -2,25 +2,35 @@
 
 import { useState, useRef, useEffect, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { OrbitControls, useGLTF, PerspectiveCamera, Html } from "@react-three/drei"
+import { OrbitControls, useGLTF, PerspectiveCamera } from "@react-three/drei"
 import { X } from "lucide-react"
 import * as THREE from "three"
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
+function useIsPortraitMobile() {
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false)
+
+  const checkOrientation = () => {
+    const isMobile = window.innerWidth < 768
+    const isPortrait = window.innerHeight > window.innerWidth
+    setIsPortraitMobile(isMobile && isPortrait)
+  }
+
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
+    checkOrientation()
+    window.addEventListener("resize", checkOrientation)
+    window.addEventListener("orientationchange", checkOrientation)
+    return () => {
+      window.removeEventListener("resize", checkOrientation)
+      window.removeEventListener("orientationchange", checkOrientation)
+    }
   }, [])
-  return isMobile
+
+  return isPortraitMobile
 }
 
 type ModelViewerProps = {
   modelPath: string
   isOpen: boolean
-  
   onClose: () => void
   onLoad?: () => void
   dimensions: Record<string, string>
@@ -40,7 +50,6 @@ const dimensionPosition2D: Record<string, Record<string, { top: string; left: st
     A: { top: "38%", left: "20%" },
     B: { top: "37.5%", left: "50%" },
     C: { top: "66.5%", left: "59%" },
-    
     E: { top: "57%", left: "75.5%" },
     F: { top: "75%", left: "69.1%" },
   },
@@ -52,7 +61,6 @@ const dimensionPosition2D: Record<string, Record<string, { top: string; left: st
     E: { top: "57%", left: "63.7%" },
     F: { top: "39%", left: "53%" },
   },
-  // Add more model mappings here
 }
 
 const focusMap: Record<string, { position: [number, number, number]; target: [number, number, number] }> = {
@@ -118,7 +126,7 @@ function Model({ modelPath, onLoaded }: { modelPath: string; onLoaded: () => voi
 }
 
 export default function ModelViewer({ modelPath, isOpen, onClose, dimensions }: ModelViewerProps) {
-  const isMobile = useIsMobile()
+  const isPortraitMobile = useIsPortraitMobile()
   const [showDimensions, setShowDimensions] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -133,50 +141,56 @@ export default function ModelViewer({ modelPath, isOpen, onClose, dimensions }: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 print:hidden">
-      <div className="relative w-[90vw] h-[80vh] max-w-4xl bg-white rounded-lg overflow-hidden">
-        <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-white" aria-label="Close">
-          <X size={24} />
-        </button>
-
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
-          <button onClick={() => setShowDimensions(true)} className={`px-3 py-1 rounded-lg font-medium ${showDimensions ? "bg-white text-gray-800 border" : "bg-black text-white"}`}>
-            With Dimension
-          </button>
-          <button onClick={() => setShowDimensions(false)} className={`px-3 py-1 rounded-lg font-medium ${!showDimensions ? "bg-white text-gray-800 border" : "bg-black text-white"}`}>
-            Without Dimension
-          </button>
+      {isPortraitMobile ? (
+        <div className="text-white text-lg text-center px-6">
+          <p>Please rotate your phone to landscape mode to view the model properly.</p>
         </div>
+      ) : (
+        <div className="relative w-[90vw] h-[80vh] max-w-4xl bg-white rounded-lg overflow-hidden">
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-white" aria-label="Close">
+            <X size={24} />
+          </button>
 
-        {showDimensions ? (
-          <div className="relative w-full h-full">
-            <img src={imageMap[modelKey]} className="w-full h-full object-contain" alt="2D model" />
-            {(dimensionPosition2D[modelKey] && Object.entries(dimensionPosition2D[modelKey]).map(([label, pos]) => (
-              dimensions[label] && (
-                <div key={label} className="absolute text-xs font-bold text-black bg-white/80 px-1 rounded" style={{ top: pos.top, left: pos.left }}>
-                  {dimensions[label]}
-                </div>
-              )
-            )))}
+          <div className="absolute top-4 left-4 z-10 flex gap-2">
+            <button onClick={() => setShowDimensions(true)} className={`px-3 py-1 rounded-lg font-medium ${showDimensions ? "bg-white text-gray-800 border" : "bg-black text-white"}`}>
+              With Dimension
+            </button>
+            <button onClick={() => setShowDimensions(false)} className={`px-3 py-1 rounded-lg font-medium ${!showDimensions ? "bg-white text-gray-800 border" : "bg-black text-white"}`}>
+              Without Dimension
+            </button>
           </div>
-        ) : (
-          <Canvas className="w-full h-full">
-            <CameraController modelPath={modelPath} />
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
-            <spotLight position={[10, 10, 10]} angle={0.2} penumbra={1} intensity={1.5} castShadow />
-            <Suspense fallback={null}>
-              <Model modelPath={modelPath} onLoaded={() => setIsLoading(false)} />
-            </Suspense>
-            <OrbitControls enablePan enableZoom enableRotate />
-          </Canvas>
-        )}
 
-        <div className="absolute bottom-4 left-0 right-0 text-center text-sm text-gray-600 bg-white/80 py-2">
-          {showDimensions
-            ? 'Click "Without Dimension" to rotate 3D model'
-            : 'Click and drag to rotate • Scroll to zoom • Shift + drag to pan'}
+          {showDimensions ? (
+            <div className="relative w-full h-full">
+              <img src={imageMap[modelKey]} className="w-full h-full object-contain" alt="2D model" />
+              {(dimensionPosition2D[modelKey] && Object.entries(dimensionPosition2D[modelKey]).map(([label, pos]) => (
+                dimensions[label] && (
+                  <div key={label} className="absolute text-xs font-bold text-black bg-white/80 px-1 rounded" style={{ top: pos.top, left: pos.left }}>
+                    {dimensions[label]}
+                  </div>
+                )
+              )))}
+            </div>
+          ) : (
+            <Canvas className="w-full h-full">
+              <CameraController modelPath={modelPath} />
+              <ambientLight intensity={0.5} />
+              <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
+              <spotLight position={[10, 10, 10]} angle={0.2} penumbra={1} intensity={1.5} castShadow />
+              <Suspense fallback={null}>
+                <Model modelPath={modelPath} onLoaded={() => setIsLoading(false)} />
+              </Suspense>
+              <OrbitControls enablePan enableZoom enableRotate />
+            </Canvas>
+          )}
+
+          <div className="absolute bottom-4 left-0 right-0 text-center text-sm text-gray-600 bg-white/80 py-2">
+            {showDimensions
+              ? 'Click "Without Dimension" to rotate 3D model'
+              : 'Click and drag to rotate • Scroll to zoom • Shift + drag to pan'}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
