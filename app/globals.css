@@ -67,6 +67,7 @@
   body {
     margin: 0;
     padding: 0;
+    background: white !important;
   }
 
   .print\:hidden {
@@ -87,5 +88,6 @@
     height: 277mm; /* A4 height minus margins */
     overflow: hidden;
     position: relative;
+    background: white !important;
   }
 }

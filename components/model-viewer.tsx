@@ -44,6 +44,14 @@ const dimensionPosition2D: Record<string, Record<string, { top: string; left: st
     E: { top: "57%", left: "75.5%" },
     F: { top: "75%", left: "69.1%" },
   },
+  hopper: {
+    A: { top: "14%", left: "42%" },
+    B: { top: "13.5%", left: "53%" },
+    C: { top: "46.5%", left: "32.5%" },
+    D: { top: "26%", left: "44.6%" },
+    E: { top: "57%", left: "63.7%" },
+    F: { top: "39%", left: "53%" },
+  },
   // Add more model mappings here
 }
 

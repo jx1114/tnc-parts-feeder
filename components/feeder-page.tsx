@@ -223,7 +223,7 @@ export default function FeederPage({
           </div>
 
           {/* Feeder Design */}
-          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3">
+          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
             <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
@@ -254,19 +254,16 @@ export default function FeederPage({
               ))}
             </div>
 
-            {/* OK Button */}
-            <div className="mt-4 flex justify-end space-x-2 print:hidden">
-              
+            <div className="absolute bottom-6 right-6 flex space-x-2 print:hidden">
+              <button
+                onClick={handleClearData}
+                className="bg-white border border-black text-black px-4 py-2 rounded-md flex items-center"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Clear Data
+              </button>
 
               <button
-                    onClick={handleClearData}
-                    className="bg-white border border-black text-black  px-4 py-2 rounded-md flex items-center"
-                >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Clear Data
-                </button>
-
-                <button
                 onClick={handleOkClick}
                 className="bg-black text-white px-4 py-2 rounded-md"
               >
@@ -334,7 +331,11 @@ export default function FeederPage({
 
         {/* Error Toast */}
         {showError && (
-          <div className={`fixed bottom-12 right-16 z-50 p-4 ${errorMessage.includes("cleared") ? "bg-green-50 border-green-500 text-green-600" : "bg-red-50 border-red-500 text-red-600"} rounded-md shadow-lg print:hidden max-w-xs`}>
+          <div className={`fixed top-1/2 right-8 transform -translate-y-1/2 z-50 p-4 ${
+            errorMessage.includes("cleared")
+              ? "bg-green-50 border-green-500 text-green-600"
+              : "bg-red-50 border-red-500 text-red-600"
+          } rounded-md shadow-lg print:hidden max-w-xs`}>
             {errorMessage}
           </div>
         )}
