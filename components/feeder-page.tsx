@@ -64,6 +64,7 @@ export default function FeederPage({
 
   // Inactivity detection: 3s idle triggers animation
   useEffect(() => {
+    let animationTimeout: NodeJS.Timeout;
     const resetTimer = () => {
       if (inactivityTimer.current) {
         clearTimeout(inactivityTimer.current)
@@ -71,6 +72,10 @@ export default function FeederPage({
       setIsAnimating(false)
       inactivityTimer.current = setTimeout(() => {
         setIsAnimating(true)
+
+        animationTimeout = setTimeout(() => {
+          resetTimer()  // restart listening for inactivity
+        }, 3000)
       }, 3000)
     }
 
@@ -84,6 +89,7 @@ export default function FeederPage({
       if (inactivityTimer.current) {
         clearTimeout(inactivityTimer.current)
       }
+      if (animationTimeout) clearTimeout(animationTimeout)
     }
   }, [])
 
@@ -112,11 +118,11 @@ export default function FeederPage({
 
   const handlePrint = () => {
     if (!machineInfoComplete()) {
-      showTempError("Please fill in all machine information before save.")
+      showTempError("Not Complete!")
       return
     }
     if (!allDimensionsFilled()) {
-      showTempError("Please fill in all dimensions before save.")
+      showTempError("Not Complete!")
       return
     }
     setShowError(false)
@@ -125,11 +131,11 @@ export default function FeederPage({
 
   const handleNext = () => {
     if (!machineInfoComplete()) {
-      showTempError("Please fill in all machine information before proceeding.")
+      showTempError("Not Complete!")
       return
     }
     if (!allDimensionsFilled()) {
-      showTempError("Please fill in all dimensions before proceeding.")
+      showTempError("Not Complete!")
       return
     }
     if (nextPageRoute) {
@@ -155,11 +161,11 @@ export default function FeederPage({
 
   const handleOkClick = () => {
     if (!machineInfoComplete()) {
-      showTempError("Please fill in all machine information before continuing.")
+      showTempError("Not Complete!")
       return
     }
     if (!allDimensionsFilled()) {
-      showTempError("Please fill in all dimensions before continuing.")
+      showTempError("Not Complete!")
       return
     }
 
@@ -228,7 +234,7 @@ export default function FeederPage({
 
 
           {/* Machine Information */}
-          <div className="border bg-[#fffafa] rounded-md p-3 mb-3 print:p-0 light">
+          <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
             <h2 className="text-lg font-medium mb-2">Machine Information</h2>
             <div className="grid grid-cols-3 gap-4">
               {machineInfoFields.map((field) => (
@@ -261,7 +267,7 @@ export default function FeederPage({
           </div>
 
           {/* Feeder Design */}
-          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 print:p-0 light relative">
+          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
             <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
@@ -369,7 +375,7 @@ export default function FeederPage({
 
         {/* Error Toast */}
         {showError && (
-          <div className={`fixed top-1/2 right-8 transform -translate-y-1/2 z-50 p-4 ${
+          <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 p-4 ${
             errorMessage.includes("cleared")
               ? "bg-green-50 border-green-500 text-green-600"
               : "bg-red-50 border-red-500 text-red-600"
@@ -442,7 +448,8 @@ export default function FeederPage({
       <style jsx>{`
   .wave {
     display: inline-block;
-    animation: fallBounce 1.2s ease-out forwards;
+    animation: fallBounce 2.2s ease-out forwards;
+    color:red;
   }
 
   @keyframes fallBounce {

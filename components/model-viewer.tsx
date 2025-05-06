@@ -40,18 +40,18 @@ const imageMap: Record<string, string> = {
   bowl: "/bowl-view.png",
   linear: "/linear-view.png",
   hopper: "/hopper-view.png",
-  "set-a": "/hopper-view.png",
-  "set-b": "/hopper-view.png",
-  "set-c": "/hopper-view.png",
+  "set-a": "/set-a-view.png",
+  "set-b": "/set-b-view.png",
+  "set-c": "/set-c-view.png",
 }
 
 const dimensionPosition2D: Record<string, Record<string, { top: string; left: string }>> = {
   bowl: {
-    A: { top: "38%", left: "20%" },
-    B: { top: "37.5%", left: "50%" },
-    C: { top: "66.5%", left: "59%" },
-    E: { top: "57%", left: "75.5%" },
-    F: { top: "75%", left: "69.1%" },
+    A: { top: "38%", left: "19.2%" },
+    B: { top: "38%", left: "50%" },
+    C: { top: "66%", left: "59.5%" },
+    E: { top: "57%", left: "77.7%" },
+    F: { top: "75%", left: "70.7%" },
   },
   hopper: {
     A: { top: "14%", left: "42%" },
@@ -115,11 +115,11 @@ function Model({ modelPath, onLoaded }: { modelPath: string; onLoaded: () => voi
 
   useFrame((_, delta) => {
     if (!modelRef.current || !rotationRef.current.shouldRotate) return
-    const speed = 2 * Math.PI
+    const speed = 1 * Math.PI
     const increment = speed * delta
     modelRef.current.rotation.y += increment
     rotationRef.current.currentAngle += increment
-    if (rotationRef.current.currentAngle >= 4 * Math.PI) rotationRef.current.shouldRotate = false
+    if (rotationRef.current.currentAngle >= 2 * Math.PI) rotationRef.current.shouldRotate = false
   })
 
   return <group ref={modelRef}><primitive object={scene} scale={getScale(modelPath)} /></group>
@@ -146,7 +146,7 @@ export default function ModelViewer({ modelPath, isOpen, onClose, dimensions }: 
           <p>Please rotate your phone to landscape mode to view the model properly.</p>
         </div>
       ) : (
-        <div className="relative w-[90vw] h-[80vh] max-w-4xl bg-white rounded-lg overflow-hidden">
+        <div className="relative w-[800px] h-[600px] bg-white rounded-lg overflow-hidden">
           <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-white" aria-label="Close">
             <X size={24} />
           </button>
