@@ -47,11 +47,11 @@ const imageMap: Record<string, string> = {
 
 const dimensionPosition2D: Record<string, Record<string, { top: string; left: string }>> = {
   bowl: {
-    A: { top: "38%", left: "19.2%" },
+    A: { top: "38%", left: "19%" },
     B: { top: "38%", left: "50%" },
     C: { top: "66%", left: "59.5%" },
-    E: { top: "57%", left: "77.7%" },
-    F: { top: "75%", left: "70.7%" },
+    E: { top: "57%", left: "77.5%" },
+    F: { top: "75%", left: "70.5%" },
   },
   hopper: {
     A: { top: "14%", left: "42%" },
@@ -146,7 +146,7 @@ export default function ModelViewer({ modelPath, isOpen, onClose, dimensions }: 
           <p>Please rotate your phone to landscape mode to view the model properly.</p>
         </div>
       ) : (
-        <div className="relative w-[800px] h-[600px] bg-white rounded-lg overflow-hidden">
+        <div className="relative w-[640px] h-[480px] bg-white rounded-lg overflow-hidden">
           <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-white" aria-label="Close">
             <X size={24} />
           </button>
