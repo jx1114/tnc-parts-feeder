@@ -32,10 +32,10 @@ const setCDimensionPositions: Record<string, { x: number; y: number }> = {
     H: { x: 18.4, y: 98.7 },
     I: { x: 43.2, y: 98.8 },
     J: { x: 43.5, y: 67.2 },
-    K: { x: 31.8, y: 55.5 },
+    K: { x: 31.8, y: 54.8 },
     L: { x: 59.2, y: 51.6 },
     M: { x: 29.8, y: 1.5 },
-    N: { x: 31.8, y: 4.3 },
+    N: { x: 31.8, y: 4 },
     O: { x: 42, y: 33.5 },
     P: { x: 45.4, y: 29 },
 }

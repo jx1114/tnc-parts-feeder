@@ -8,7 +8,6 @@ import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
 import { RefreshCw } from "lucide-react"
 
-
 export type FeederPageProps = {
   title: string
   feederType: string
@@ -55,23 +54,24 @@ export default function FeederPage({
   const [errorMessage, setErrorMessage] = useState("")
   const [showModelViewer, setShowModelViewer] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [showFireworks, setShowFireworks] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
 
   const [isAnimating, setIsAnimating] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+  
 
+  // Inactivity detection: 3s idle triggers animation
   useEffect(() => {
     const resetTimer = () => {
       if (inactivityTimer.current) {
         clearTimeout(inactivityTimer.current)
       }
+      setIsAnimating(false)
       inactivityTimer.current = setTimeout(() => {
         setIsAnimating(true)
-        setTimeout(() => setIsAnimating(false), 1000)
-      }, 1000)
+      }, 3000)
     }
 
     const events = ["mousemove", "keydown", "mousedown", "touchstart"]
@@ -112,11 +112,11 @@ export default function FeederPage({
 
   const handlePrint = () => {
     if (!machineInfoComplete()) {
-      showTempError("Please fill in all machine information before printing.")
+      showTempError("Please fill in all machine information before save.")
       return
     }
     if (!allDimensionsFilled()) {
-      showTempError("Please fill in all dimensions before printing.")
+      showTempError("Please fill in all dimensions before save.")
       return
     }
     setShowError(false)
@@ -164,7 +164,7 @@ export default function FeederPage({
     }
 
     setShowSuccessModal(true)
-}
+  }
 
   const showTempError = (message: string, isSuccess = false) => {
     setShowError(true)
@@ -211,13 +211,24 @@ export default function FeederPage({
             onClick={handlePrint}
             className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
           >
-            Save as PDF
+            Save
           </button>
 
-          <h1 className={`text-2xl font-bold text-center mb-4 ${isAnimating ? "animate-fall" : ""}`}>{title}</h1>
+          <h1 className="text-2xl font-bold text-center mb-4 flex justify-center space-x-1">
+            {title.split("").map((char, idx) => (
+              <span
+                key={idx}
+                className={isAnimating ? "wave" : ""}
+                style={isAnimating ? { animationDelay: `${idx * 0.1}s` } : {}}
+              >
+                {char}
+              </span>
+            ))}
+          </h1>
+
 
           {/* Machine Information */}
-          <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
+          <div className="border bg-[#fffafa] rounded-md p-3 mb-3 print:p-0 light">
             <h2 className="text-lg font-medium mb-2">Machine Information</h2>
             <div className="grid grid-cols-3 gap-4">
               {machineInfoFields.map((field) => (
@@ -250,7 +261,7 @@ export default function FeederPage({
           </div>
 
           {/* Feeder Design */}
-          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
+          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 print:p-0 light relative">
             <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
@@ -265,7 +276,7 @@ export default function FeederPage({
                   key={dim}
                   onClick={() => handleDimensionClick(dim)}
                   className={`absolute text-xs flex items-center justify-center ${
-                    feederData.dimensions[dim] ? "bg-white border-none text-black" : "bg-white border border-red-500 text-red-500"
+                    feederData.dimensions[dim] ? "bg-white border-none text-black" : "bg-white border border-transparent text-red-500"
                   }`}
                   style={{
                     left: `${x}%`,
@@ -429,22 +440,29 @@ export default function FeederPage({
       </div>
 
       <style jsx>{`
-            @keyframes fallDown {
-              0% {
-                transform: translateY(0);
-              }
-              50% {
-                transform: translateY(20px);
-              }
-              100% {
-                transform: translateY(0);
-              }
-            }
+  .wave {
+    display: inline-block;
+    animation: fallBounce 1.2s ease-out forwards;
+  }
 
-            .animate-fall {
-              animation: fallDown 1s ease-in-out;
-            }
-          `}</style>
+  @keyframes fallBounce {
+    0% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(60px);
+    }
+    60% {
+      transform: translateY(30px);
+    }
+    80% {
+      transform: translateY(45px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+`}</style>
     </>
   )
 }

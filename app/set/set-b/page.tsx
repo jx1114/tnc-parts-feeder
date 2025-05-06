@@ -15,7 +15,7 @@ const setBDimensionDescriptions: Record<string, string> = {
 
 const setBDimensionPositions: Record<string, { x: number; y: number }> = {
     A: { x: 45.2, y: 26.9 },
-    B: { x: 31, y: 43 },
+    B: { x: 31, y: 43.5 },
     C: { x: 20.3, y: 45.4 },
     D: { x: 35, y: 48 },
     E: { x: 80.6, y: 71.7 },

@@ -67,9 +67,9 @@ const focusMap: Record<string, { position: [number, number, number]; target: [nu
   bowl: { position: [0, 0, 5], target: [0, 0, 0] },
   linear: { position: [5, 0, 5], target: [0, 0, 0] },
   hopper: { position: [-4, 0, 5], target: [0, 0, 0] },
-  "set-a": { position: [0, 0, 5], target: [0, 0, 0] },
-  "set-b": { position: [0, 0, 5], target: [0, 0, 0] },
-  "set-c": { position: [0, 0, 5], target: [0, 0, 0] },
+  "set-a": { position: [0, 0, 10], target: [0, 0, 0] },
+  "set-b": { position: [-5, 0, 10], target: [0, 0, 0] },
+  "set-c": { position: [-5, 0, 14], target: [0, 0, 0] },
 }
 
 function CameraController({ modelPath }: { modelPath: string }) {
