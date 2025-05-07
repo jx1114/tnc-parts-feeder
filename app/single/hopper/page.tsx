@@ -33,6 +33,7 @@ export default function hopperPage() {
       machineInfoFields={[
         { id: "machineNo", label: "Machine No.", type: "text" },
         { id: "hopperBinCapacity", label: "Hopper Bin Capacity", type: "number" },
+        { id: "remark", label: "Remark", type: "text" },
       ]}
     />
   )

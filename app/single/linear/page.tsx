@@ -82,6 +82,7 @@ export default function LinearPage() {
         machineInfoFields={[
           { id: "machineNo", label: "Machine No.", type: "text" },
           { id: "linearNo", label: "Linear No.", type: "text" },
+          { id: "remark", label: "Remark", type: "text" },
         ]}
       />
 

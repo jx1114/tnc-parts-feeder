@@ -43,6 +43,8 @@ export default function FeederPage({
       options: ["Clockwise", "Anti-clockwise"],
     },
     { id: "uph", label: "UPH", type: "number" },
+    { id: "remark", label: "Remark", type: "text" },
+    { id: "remark", label: "Remark", type: "text" }, // Optional field
   ],
 }: FeederPageProps) {
   const { getFeederData, updateFeederData, setCurrentFeederType, setNextFeederType } = useFormContext()
@@ -76,7 +78,7 @@ export default function FeederPage({
         animationTimeout = setTimeout(() => {
           resetTimer()  // restart listening for inactivity
         }, 3000)
-      }, 3000)
+      }, 8000)
     }
 
     const events = ["mousemove", "keydown", "mousedown", "touchstart"]
@@ -98,7 +100,9 @@ export default function FeederPage({
   }
 
   const machineInfoComplete = () => {
-    return machineInfoFields.every((field) => {
+    return machineInfoFields
+      .filter((field) => field.id !== "remark")
+      .every((field) => {
       const value = feederData.machineInfo[field.id]
       return value !== undefined && value.trim() !== ""
     })
@@ -258,7 +262,9 @@ export default function FeederPage({
                       type={field.type}
                       value={feederData.machineInfo[field.id] || ""}
                       onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                      className={`w-full border rounded-md px-3 py-2 ${!feederData.machineInfo[field.id] ? "border-red-500" : ""}`}
+                      className={`w-full border rounded-md px-3 py-2 ${
+                        field.id !== "remark" && !feederData.machineInfo[field.id] ? "border-red-500" : ""
+                      }`}
                     />
                   )}
                 </div>
@@ -396,18 +402,20 @@ export default function FeederPage({
         &times;
       </button>
 
-      <h2 className="text-2xl font-bold mb-4">Congratulations! 🎊</h2>
+      <h2 className="text-2xl font-bold mb-4">Congratulations! 🎉🎉🎉</h2>
       
 
       {/* Looping video */}
-      <video
-        src={`/hopper.mp4`}  ///${feederType}.mp4
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="w-full rounded-md mb-4"
-      />
+      <div className="w-full rounded-md mb-4 border-2 border-black bg-white overflow-hidden">
+        <video
+          src={`/hopper.mp4`} // or use `/yourVideo.mp4`
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-auto block"
+        />
+      </div>
 
       {/* View 3D button only */}
       <button
@@ -444,7 +452,7 @@ export default function FeederPage({
   .wave {
     display: inline-block;
     animation: fallBounce 2.2s ease-out forwards;
-    color:red;
+    color:rgb(187, 57, 57);
   }
 
   @keyframes fallBounce {
