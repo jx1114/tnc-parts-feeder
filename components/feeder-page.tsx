@@ -217,12 +217,7 @@ export default function FeederPage({
       <NavigationMenu />
       <div className="bg-[#fdf5e6] min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
-          <button
-            onClick={handlePrint}
-            className="absolute top-4 right-4 print:hidden bg-black hover:bg-gray-800 text-white px-3 py-1 rounded-md text-sm"
-          >
-            Save
-          </button>
+          
 
           <h1 className="text-2xl font-bold text-center mb-4 flex justify-center space-x-1">
             {title.split("").map((char, idx) => (
@@ -438,7 +433,7 @@ export default function FeederPage({
         &times;
       </button>
 
-      <h2 className="text-2xl font-bold mb-4">Congratulations! 🎉🎉🎉</h2>
+      <h2 className="text-2xl font-bold mb-4">Congratulations, your dimension is completed!🎉🎉🎉</h2>
       
 
       {/* Looping video */}
@@ -453,16 +448,26 @@ export default function FeederPage({
         />
       </div>
 
-      {/* View 3D button only */}
-      <button
-        onClick={() => {
-          setShowSuccessModal(false)
-          setShowModelViewer(true)
-        }}
-        className="bg-black text-white px-6 py-2 rounded-md"
-      >
-        View 3D
-      </button>
+       {/* Buttons: Save and View 3D */}
+       <div className="flex justify-center gap-4 mt-2">
+        
+        <button
+          onClick={() => {
+            setShowSuccessModal(false)
+            setShowModelViewer(true)
+          }}
+          className= "bg-white text-black border border-black px-6 py-2 rounded-md"          
+        >
+          View 3D
+        </button>
+
+        <button
+          onClick={handlePrint}
+          className="bg-black text-white px-6 py-2 rounded-md"
+        >
+          Save
+        </button>
+      </div>
     </div>
   </div>
 )}
