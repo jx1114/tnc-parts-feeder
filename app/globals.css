@@ -90,4 +90,9 @@
     position: relative;
     background: white !important;
   }
+
+  /* ✅ Hide placeholder text in print */
+  textarea::placeholder {
+    color: transparent !important;
+  }
 }

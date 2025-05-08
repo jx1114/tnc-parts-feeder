@@ -237,40 +237,72 @@ export default function FeederPage({
           </h1>
 
 
-          {/* Machine Information */}
-          <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
-            <h2 className="text-lg font-medium mb-2">Machine Information</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {machineInfoFields.map((field) => (
-                <div key={field.id}>
-                  <label htmlFor={field.id} className="block mb-1 font-medium">{field.label}</label>
-                  {field.type === "select" ? (
-                    <select
+       {/* Machine Information */}
+        <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
+          <h2 className="text-lg font-medium mb-2">Machine Information</h2>
+          <div className="grid grid-cols-3 gap-4">
+            {machineInfoFields.map((field) => (
+              <div key={field.id}>
+                <label htmlFor={field.id} className="block mb-1 font-medium">
+                  {field.label}
+                </label>
+                {field.id === "remark" ? (
+                  <div className="relative">
+                    <textarea
                       id={field.id}
                       value={feederData.machineInfo[field.id] || ""}
-                      onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                      className={`w-full border rounded-md px-3 py-2 ${!feederData.machineInfo[field.id] ? "border-red-500" : ""}`}
-                    >
-                      <option value="">Select</option>
-                      {field.options?.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      id={field.id}
-                      type={field.type}
-                      value={feederData.machineInfo[field.id] || ""}
-                      onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                      className={`w-full border rounded-md px-3 py-2 ${
-                        field.id !== "remark" && !feederData.machineInfo[field.id] ? "border-red-500" : ""
-                      }`}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value.length <= 60) {
+                          updateMachineInfo(field.id, value)
+                           // Auto-grow the textarea
+                          e.target.style.height = "auto"
+                          e.target.style.height = `${e.target.scrollHeight}px`
+                        }
+                      }}
+                      maxLength={60}
+                      rows={1}
+                      className="w-full border rounded-md px-3 py-2 resize-none overflow-hidden"
+                      placeholder="Enter up to 60 characters"
                     />
-                  )}
-                </div>
-              ))}
-            </div>
+                    <div className="text-right text-sm text-gray-500 mt-1 print:hidden">
+                      {(feederData.machineInfo[field.id]?.length || 0)} / 60 chars
+                    </div>
+                  </div>
+                ) : field.type === "select" ? (
+                  <select
+                    id={field.id}
+                    value={feederData.machineInfo[field.id] || ""}
+                    onChange={(e) => updateMachineInfo(field.id, e.target.value)}
+                    className={`w-full border rounded-md px-3 py-2 ${
+                      !feederData.machineInfo[field.id] ? "border-red-500" : ""
+                    }`}
+                  >
+                    <option value="">Select</option>
+                    {field.options?.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id={field.id}
+                    type={field.type}
+                    value={feederData.machineInfo[field.id] || ""}
+                    onChange={(e) => updateMachineInfo(field.id, e.target.value)}
+                    className={`w-full border rounded-md px-3 py-2 ${
+                      field.id !== "remark" && !feederData.machineInfo[field.id]
+                        ? "border-red-500"
+                        : ""
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
           </div>
+        </div>
+
 
           {/* Feeder Design */}
           <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
