@@ -336,7 +336,7 @@ export default function FeederPage({
               ))}
             </div>
 
-            <div className="absolute bottom-6 right-6 flex space-x-2 print:hidden">
+            <div className="absolute bottom-6 left-6 flex print:hidden">
               <button
                 onClick={handleClearData}
                 className="bg-white border border-black text-black px-4 py-2 rounded-md flex items-center"
@@ -344,6 +344,10 @@ export default function FeederPage({
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Clear Data
               </button>
+            </div>
+
+
+            <div className="absolute bottom-6 right-6 flex print:hidden">
 
               <button
                 onClick={handleOkClick}
