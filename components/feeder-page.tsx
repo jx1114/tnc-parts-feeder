@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
-import { RefreshCw } from "lucide-react"
+import { RefreshCw, Clipboard } from "lucide-react"
 
 export type FeederPageProps = {
   title: string
@@ -62,6 +62,9 @@ export default function FeederPage({
 
   const [isAnimating, setIsAnimating] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+  const [showPasteModal, setShowPasteModal] = useState(false)
+  const [pasteText, setPasteText] = useState("")
+
   
 
   // Inactivity detection: 3s idle triggers animation
@@ -182,6 +185,10 @@ export default function FeederPage({
     setTimeout(() => setShowError(false), isSuccess ? 3000 : 5000)
   }
 
+  const handlePasteData = () => {
+    setShowPasteModal(true)
+  }
+
   const getCurrentDate = () => {
     const now = new Date()
     const day = String(now.getDate()).padStart(2, "0")
@@ -211,6 +218,78 @@ export default function FeederPage({
       },
     })
   }
+
+  const processPastedData = () => {
+    try {
+      // Parse the pasted text
+      const lines = pasteText.split("\n").filter((line) => line.trim() !== "")
+
+
+      // Create a new object to store the parsed data
+      const newMachineInfo: Record<string, string> = {}
+      const newDimensions: Record<string, string> = {}
+
+
+      // Process each line
+      lines.forEach((line) => {
+        // Try to match machine info fields
+        machineInfoFields.forEach((field) => {
+          const regex = new RegExp(`${field.label}\\s*:\\s*(.+)`, "i")
+          const match = line.match(regex)
+          if (match && match[1]) {
+            newMachineInfo[field.id] = match[1].trim()
+          }
+        })
+
+
+        // Try to match dimensions
+        Object.entries(dimensionDescriptions).forEach(([key, description]) => {
+          // Match either "A: 100" or "A (Bowl Diameter): 100" or just look for the dimension code
+          const simpleRegex = new RegExp(`^\\s*${key}\\s*:\\s*(\\d+)`, "i")
+          const detailedRegex = new RegExp(`^\\s*${key}\\s*\$$.*\$$\\s*:\\s*(\\d+)`, "i")
+          const valueOnlyRegex = new RegExp(`\\b${key}\\b[^:]*?\\b(\\d+)\\s*mm\\b`, "i")
+
+
+          const simpleMatch = line.match(simpleRegex)
+          const detailedMatch = line.match(detailedRegex)
+          const valueOnlyMatch = line.match(valueOnlyRegex)
+
+
+          if (simpleMatch && simpleMatch[1]) {
+            newDimensions[key] = simpleMatch[1].trim()
+          } else if (detailedMatch && detailedMatch[1]) {
+            newDimensions[key] = detailedMatch[1].trim()
+          } else if (valueOnlyMatch && valueOnlyMatch[1]) {
+            newDimensions[key] = valueOnlyMatch[1].trim()
+          }
+        })
+      })
+
+
+      // Update the form data with the parsed values
+      const updatedData = {
+        machineInfo: { ...feederData.machineInfo, ...newMachineInfo },
+        dimensions: { ...feederData.dimensions, ...newDimensions },
+      }
+
+
+      // Force a complete update of the form data
+      updateFeederData(feederType, updatedData)
+
+
+      // Log the updated data to verify
+      console.log("Updated data:", updatedData)
+
+
+      setShowPasteModal(false)
+      setPasteText("")
+      showTempError("Data imported successfully!", true)
+    } catch (error) {
+      console.error("Error parsing data:", error)
+      showTempError("Failed to parse the pasted data. Please check the format.")
+    }
+  }
+
 
   return (
     <>
@@ -331,7 +410,7 @@ export default function FeederPage({
               ))}
             </div>
 
-            <div className="absolute bottom-6 left-6 flex print:hidden">
+            <div className="absolute bottom-6 left-6 flex print:hidden gap-2">
               <button
                 onClick={handleClearData}
                 className="bg-white border border-black text-black px-4 py-2 rounded-md flex items-center"
@@ -339,6 +418,15 @@ export default function FeederPage({
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Clear Data
               </button>
+
+              <button
+                onClick={handlePasteData}
+                className="bg-white border border-black text-black px-4 py-2 rounded-md flex items-center"
+              >
+                <Clipboard className="mr-2 h-4 w-4" />
+                Paste Data
+              </button>
+
             </div>
 
 
@@ -413,7 +501,7 @@ export default function FeederPage({
         {/* Error Toast */}
         {showError && (
           <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 p-4 ${
-            errorMessage.includes("cleared")
+            errorMessage.includes("successfully")
               ? "bg-green-50 border-green-500 text-green-600"
               : "bg-red-50 border-red-500 text-red-600"
           } rounded-md shadow-lg print:hidden max-w-xs`}>
@@ -488,6 +576,44 @@ export default function FeederPage({
           </div>
         )}
       </div>
+
+{/* Paste Data Modal */}
+{showPasteModal && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center print:hidden">
+            <div className="bg-white rounded-lg p-6 shadow-md w-[600px]">
+              <h2 className="text-xl font-bold mb-4">Paste Configuration Data</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Paste your configuration data below. The system will try to extract machine information and dimensions.
+              </p>
+
+
+              <textarea
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder="Paste your configuration data here..."
+                rows={10}
+                className="border w-full p-2 rounded mb-4"
+              />
+
+
+              <div className="flex justify-end gap-2">
+                <button
+                  className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
+                  onClick={() => setShowPasteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="bg-black text-white px-4 py-2 rounded"
+                  onClick={processPastedData}
+                  disabled={!pasteText.trim()}
+                >
+                  Import Data
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       <style jsx>{`
   .wave {
