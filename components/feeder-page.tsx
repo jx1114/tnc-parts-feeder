@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
-import { RefreshCw, Clipboard } from "lucide-react"
+import { RefreshCw, Printer,Clipboard } from "lucide-react"
 
 export type FeederPageProps = {
   title: string
@@ -380,7 +380,8 @@ export default function FeederPage({
 
           {/* Feeder Design */}
           <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
-            <h2 className="text-lg font-medium mb-2">Feeder Design</h2>
+            <h2 className="text-lg font-medium mb-2">Feeder Info</h2>
+            <p className="text-sm italic text-red-500 mb-2">* Set value as 0 if there is no dimension</p>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <Image
                 src={imageSrc || "/placeholder.svg"}
@@ -553,7 +554,7 @@ export default function FeederPage({
           onClick={handlePrint}
           className="bg-black text-white px-6 py-2 rounded-md"
         >
-          Save
+          Print
         </button>
       </div>
     </div>
