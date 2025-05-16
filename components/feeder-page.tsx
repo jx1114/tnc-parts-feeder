@@ -60,43 +60,83 @@ export default function FeederPage({
   const router = useRouter()
   const pathname = usePathname()
 
-  const [isAnimating, setIsAnimating] = useState(false)
-  const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+  
   const [showPasteModal, setShowPasteModal] = useState(false)
   const [pasteText, setPasteText] = useState("")
 
+  const [isAnimating, setIsAnimating] = useState(false)
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+  const dropInterval = useRef<NodeJS.Timeout | null>(null);
+
+  function dropAllCharsInRandomOrder() {
+    const chars = Array.from(document.querySelectorAll<HTMLElement>(".char-span"));
+    const shuffled = chars.sort(() => Math.random() - 0.5);
   
+    shuffled.forEach((char, index) => {
+      setTimeout(() => {
+        char.classList.add("fall-down");
+      }, index * 300);
+    });
+  
+    const totalDropTime = shuffled.length * 300 + 1200; // 300ms delay per + 1.2s animation
+  
+    setTimeout(() => {
+      // Bounce back all at once
+      chars.forEach((char) => {
+        char.classList.remove("fall-down");
+        char.classList.add("bounce-back");
+  
+        // Clean up class after animation so it can retrigger later
+        setTimeout(() => {
+          char.classList.remove("bounce-back");
+        }, 1200);
+      });
+    }, totalDropTime);
+  }
+
+function stopDroppingCharacters() {
+  if (dropInterval.current) {
+    clearInterval(dropInterval.current);
+    dropInterval.current = null;
+  }
+}
+
+
 
   // Inactivity detection: 3s idle triggers animation
   useEffect(() => {
     let animationTimeout: NodeJS.Timeout;
+  
     const resetTimer = () => {
       if (inactivityTimer.current) {
-        clearTimeout(inactivityTimer.current)
+        clearTimeout(inactivityTimer.current);
       }
       setIsAnimating(false)
+      stopDroppingCharacters(); // stop when user is active
+  
       inactivityTimer.current = setTimeout(() => {
         setIsAnimating(true)
-
+        dropAllCharsInRandomOrder();  // start dropping on inactivity
+  
         animationTimeout = setTimeout(() => {
-          resetTimer()  // restart listening for inactivity
-        }, 3000)
-      }, 8000)
-    }
-
-    const events = ["mousemove", "keydown", "mousedown", "touchstart"]
-    events.forEach((event) => window.addEventListener(event, resetTimer))
-
-    resetTimer()
-
+          resetTimer(); // restart listener after 3s of animation
+        }, 6000 + 300 * title.length);
+      }, 8000); // 8s inactivity triggers drop
+    };
+  
+    const events = ["mousemove", "keydown", "mousedown", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+  
+    resetTimer(); // start timer on mount
+  
     return () => {
-      events.forEach((event) => window.removeEventListener(event, resetTimer))
-      if (inactivityTimer.current) {
-        clearTimeout(inactivityTimer.current)
-      }
-      if (animationTimeout) clearTimeout(animationTimeout)
-    }
-  }, [])
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      if (animationTimeout) clearTimeout(animationTimeout);
+      stopDroppingCharacters();
+    };
+  }, []);
+  
 
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
@@ -298,17 +338,16 @@ export default function FeederPage({
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
           
 
-          <h1 className="text-2xl font-bold text-center mb-4 flex justify-center space-x-1">
-            {title.split("").map((char, idx) => (
-              <span
-                key={idx}
-                className={isAnimating ? "wave" : ""}
-                style={isAnimating ? { animationDelay: `${idx * 0.1}s` } : {}}
-              >
-                {char}
-              </span>
-            ))}
-          </h1>
+        <h1 className="text-2xl font-bold text-center mb-4 relative z-100">
+  {title.split(/(\s+)/).map((part, idx) => {
+    if (part.trim() === "") return <span key={`space-${idx}`}>{part}</span>
+    return part.split("").map((char, charIdx) => (
+      <span key={`${idx}-${charIdx}`} className="char-span relative inline-block">
+        {char}
+      </span>
+    ))
+  })}
+</h1>
 
 
        {/* Machine Information */}
@@ -616,30 +655,48 @@ export default function FeederPage({
           </div>
         )}
 
-      <style jsx>{`
-  .wave {
-    display: inline-block;
-    animation: fallBounce 2.2s ease-out forwards;
-    color:rgb(187, 57, 57);
+      <style jsx global>{`
+ @keyframes fallDownOnly {
+  0% {
+    transform: translateY(0);
+    color: darkred;
   }
+  100% {
+    transform: translateY(calc(60vh - 60px));
+    color: darkred;
+  }
+}
 
-  @keyframes fallBounce {
-    0% {
-      transform: translateY(0);
-    }
-    40% {
-      transform: translateY(60px);
-    }
-    60% {
-      transform: translateY(30px);
-    }
-    80% {
-      transform: translateY(45px);
-    }
-    100% {
-      transform: translateY(0);
-    }
+@keyframes bounceBack {
+  0% {
+    transform: translateY(calc(60vh - 60px));
+    color: darkred;
   }
+  50% {
+    transform: translateY(calc(60vh - 100px));
+    color: darkred;
+  }
+  100% {
+    transform: translateY(0);
+    color: black;
+  }
+}
+
+.char-span {
+  display: inline-block;
+  position: relative;
+  z-index: 0;
+}
+
+.fall-down {
+  animation: fallDownOnly 4s forwards ease-in-out;
+  position: fixed;
+  z-index: 9999;
+}
+
+.bounce-back {
+  animation: bounceBack 1.2s forwards ease-in-out;
+}
 `}</style>
     </>
   )

@@ -3,23 +3,45 @@
 import { useRouter } from "next/navigation"
 import NavigationMenu from "@/components/navigation-menu"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight, ArrowRight, Settings, Package, Layers } from "lucide-react"
 
 export default function WelcomePage() {
   const router = useRouter()
 
-  // Example images - replace with your actual images
-  const images = [
-    "/home image.png?height=600&width=800",
-    "/home image.png?height=600&width=800",
-    "/home image.png?height=600&width=800",
+  // Slides with same image but different content
+  const slides = [
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "Step 1: Choose single or set",
+      video: "hopper.mp4",
+    },
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "Step 2: Fill in the information",
+      video: "hopper.mp4",
+    },
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "Step 3: Click OK",
+      video: "hopper.mp4",
+    },
   ]
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const [activeCard, setActiveCard] = useState<string | null>(null)
   const [hoverFeeder, setHoverFeeder] = useState<string | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
+
+  // Debug state to track button clicks
+  const [debugInfo, setDebugInfo] = useState("")
+
+  // Initialize video refs array
+  useEffect(() => {
+    videoRefs.current = videoRefs.current.slice(0, slides.length)
+  }, [slides.length])
 
   useEffect(() => {
     // Animation on page load
@@ -27,18 +49,88 @@ export default function WelcomePage() {
 
     // Auto-rotate images
     const interval = setInterval(() => {
-      nextImage()
-    }, 5000)
+      if (!isTransitioning) {
+        handleNextImage()
+      }
+    }, 8000) // Longer interval to allow video to play
 
     return () => clearInterval(interval)
-  }, [])
+  }, [isTransitioning])
 
-  const prevImage = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+  // Handle video playback when slide changes
+  useEffect(() => {
+    // Stop all videos first
+    videoRefs.current.forEach((video) => {
+      if (video) {
+        video.pause()
+        video.currentTime = 0
+      }
+    })
+
+    // Play the current video if it exists
+    const currentVideo = videoRefs.current[currentIndex]
+    if (currentVideo && slides[currentIndex].video) {
+      // Small delay to ensure the slide transition has started
+      const playPromise = setTimeout(() => {
+        if (currentVideo) {
+          currentVideo.play().catch((e) => console.log("Video play error:", e))
+        }
+      }, 100)
+
+      return () => clearTimeout(playPromise)
+    }
+  }, [currentIndex, slides])
+
+  // Separate handler functions to avoid closure issues
+  const handlePrevImage = () => {
+    if (isTransitioning) return
+
+    setDebugInfo("Prev clicked: moving from " + currentIndex)
+    setIsTransitioning(true)
+
+    // Use functional update to ensure we're working with the latest state
+    setCurrentIndex((prevIndex) => {
+      const newIndex = prevIndex === 0 ? slides.length - 1 : prevIndex - 1
+      console.log(`Moving from slide ${prevIndex} to ${newIndex}`)
+      return newIndex
+    })
+
+    // Reset transition state after animation completes
+    setTimeout(() => {
+      setIsTransitioning(false)
+    }, 1000)
   }
 
-  const nextImage = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+  const handleNextImage = () => {
+    if (isTransitioning) return
+
+    setDebugInfo("Next clicked: moving from " + currentIndex)
+    setIsTransitioning(true)
+
+    // Use functional update to ensure we're working with the latest state
+    setCurrentIndex((prevIndex) => {
+      const newIndex = prevIndex === slides.length - 1 ? 0 : prevIndex + 1
+      console.log(`Moving from slide ${prevIndex} to ${newIndex}`)
+      return newIndex
+    })
+
+    // Reset transition state after animation completes
+    setTimeout(() => {
+      setIsTransitioning(false)
+    }, 1000)
+  }
+
+  const handleGoToSlide = (index: number) => {
+    if (isTransitioning || index === currentIndex) return
+
+    setDebugInfo(`Go to slide ${index} from ${currentIndex}`)
+    setIsTransitioning(true)
+    setCurrentIndex(index)
+
+    // Reset transition state after animation completes
+    setTimeout(() => {
+      setIsTransitioning(false)
+    }, 1000)
   }
 
   const feederTypes = [
@@ -61,21 +153,27 @@ export default function WelcomePage() {
         className={`transition-all duration-1000 ease-out transform ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
       >
         {/* Hero Section */}
-        <div className="relative h-[50vh] overflow-hidden">
+        <div className="relative h-[60vh] overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 bg-black opacity-30 z-10"></div>
           <div className="absolute inset-0 bg-[url('/placeholder.svg?height=100&width=100')] bg-repeat opacity-10 z-0"></div>
 
           {/* Carousel */}
           <div className="relative h-full w-full">
-            {images.map((img, idx) => (
+            {slides.map((slide, idx) => (
               <div
                 key={idx}
-                className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentIndex ? "opacity-100" : "opacity-0"}`}
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                  idx === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
+                }`}
+                style={{
+                  zIndex: idx === currentIndex ? 5 : 0,
+                  transitionDelay: idx === currentIndex ? "0ms" : "0ms",
+                }}
               >
                 <Image
-                  src={img || "/placeholder.svg"}
-                  alt={`Feeder Image ${idx + 1}`}
+                  src={slide.image || "/placeholder.svg"}
+                  alt={`Slide ${idx + 1}`}
                   fill
                   className="object-cover"
                   priority={idx === 0}
@@ -85,34 +183,77 @@ export default function WelcomePage() {
 
             {/* Navigation buttons */}
             <button
-              onClick={prevImage}
-              className="absolute top-1/2 left-4 z-20 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
+              type="button"
+              onClick={handlePrevImage}
+              className="absolute top-1/2 left-4 z-30 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
               aria-label="Previous image"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
-              onClick={nextImage}
-              className="absolute top-1/2 right-4 z-20 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
+              type="button"
+              onClick={handleNextImage}
+              className="absolute top-1/2 right-4 z-30 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
               aria-label="Next image"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
 
-           
+            {/* Overlay content */}
+            <div className="absolute inset-0 flex items-center justify-center z-20">
+              <div className="text-center px-4 py-4 backdrop-blur-sm bg-black/30 rounded-xl max-w-3xl mx-auto">
+                {slides.map((slide, idx) => (
+                  <div
+                    key={idx}
+                    className={`transition-all duration-1000 ease-in-out ${
+                      idx === currentIndex ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 absolute inset-0"
+                    }`}
+                    style={{
+                      transitionDelay: idx === currentIndex ? "200ms" : "0ms",
+                      pointerEvents: idx === currentIndex ? "auto" : "none",
+                    }}
+                  >
+                    <h1 className="text-2xl md:text-4xl font-bold mb-4 text-white drop-shadow-lg">{slide.title}</h1>
+
+                    {slide.video && (
+                      <div className="flex justify-center">
+                        <video
+                          ref={(el) => {
+                            videoRefs.current[idx] = el
+                            return undefined
+                          }}
+                          src={slide.video}
+                          className="w-full max-w-xl rounded-lg shadow-lg"
+                          muted
+                          playsInline
+                          loop
+                          preload="auto"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Indicators */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
-              {images.map((_, idx) => (
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-3 z-20">
+              {slides.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setCurrentIndex(idx)}
+                  type="button"
+                  onClick={() => handleGoToSlide(idx)}
                   className={`w-3 h-3 rounded-full transition-all ${
-                    idx === currentIndex ? "bg-white scale-125" : "bg-white/50 hover:bg-white/70"
+                    idx === currentIndex ? "bg-white scale-125 w-8" : "bg-white/50 hover:bg-white/70"
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
               ))}
+            </div>
+
+            {/* Current slide indicator (for debugging) */}
+            <div className="absolute top-2 left-2 z-30 bg-black/50 text-white text-xs px-2 py-1 rounded">
+              Slide {currentIndex + 1} of {slides.length}
             </div>
           </div>
         </div>
@@ -259,6 +400,31 @@ export default function WelcomePage() {
           </div>
         </footer>
       </div>
+
+      {/* Add CSS for smoother animations */}
+      <style jsx global>{`
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(1.05);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes fadeOutScale {
+          from {
+            opacity: 1;
+            transform: scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: scale(1.05);
+          }
+        }
+      `}</style>
     </div>
   )
 }
