@@ -63,68 +63,10 @@ export default function FeederPage({
   const [showPasteModal, setShowPasteModal] = useState(false)
   const [pasteText, setPasteText] = useState("")
 
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [isSleeping, setIsSleeping] = useState(false)
+  // Replace animation states with inactivity popup state
+  const [showInactivityPopup, setShowInactivityPopup] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
-  const dropInterval = useRef<NodeJS.Timeout | null>(null)
-  const titleRef = useRef<HTMLHeadingElement>(null)
-
-  function dropAllCharsInRandomOrder() {
-    const chars = Array.from(document.querySelectorAll<HTMLElement>(".char-span"))
-    const shuffled = chars.sort(() => Math.random() - 0.5)
-
-    shuffled.forEach(char => {
-      char.style.opacity = '1'
-    })
-
-    shuffled.forEach((char, index) => {
-      setTimeout(() => {
-        char.classList.add("fall-down")
-      }, index * 300)
-    })
-
-    const totalDropTime = shuffled.length * 300 + 1200
-
-    setTimeout(() => {
-      setIsSleeping(true)
-      
-      // Set sleep duration to 30 seconds (30000ms)
-      inactivityTimer.current = setTimeout(() => {
-        bounceBackAllChars()
-        // Reset the timer after waking up
-        startInactivityTimer()
-      }, 30000)
-    }, totalDropTime)
-  }
-
-  function stopDroppingCharacters() {
-    if (dropInterval.current) {
-      clearInterval(dropInterval.current)
-      dropInterval.current = null
-    }
-  }
-
-  function bounceBackAllChars() {
-    const chars = Array.from(document.querySelectorAll<HTMLElement>(".char-span"))
-
-    setIsSleeping(false)
-    setIsAnimating(false) // Reset animation state when bouncing back
-
-    chars.forEach((char) => {
-      char.classList.remove("fall-down")
-      char.classList.add("bounce-back")
-
-      setTimeout(() => {
-        char.classList.remove("bounce-back")
-      }, 1200)
-    })
-
-     // Restart inactivity timer after bounce back completes
-  setTimeout(() => {
-    startInactivityTimer()
-  }, 1200) // Match this with bounce animation duration
-}
-
+  
 
   function startInactivityTimer() {
     // Clear any existing timers first
@@ -132,32 +74,28 @@ export default function FeederPage({
       clearTimeout(inactivityTimer.current)
     }
 
-     // Only set new timer if not currently animating or sleeping
-  if (!isAnimating && !isSleeping) {
-    inactivityTimer.current = setTimeout(() => {
-      setIsAnimating(true)
-      dropAllCharsInRandomOrder()
-    }, 8000)
+     // Set new inactivity timer (30 seconds)
+     inactivityTimer.current = setTimeout(() => {
+      setShowInactivityPopup(true)
+    }, 30000) // 30 seconds of inactivity
   }
+
+  function resetInactivityTimer() {
+    // Hide popup if showing
+    if (showInactivityPopup) {
+      setShowInactivityPopup(false)
+    }
+    
+    // Restart the timer
+    startInactivityTimer()
   }
 
   useEffect(() => {
     const handleUserActivity = () => {
-      // Clear any existing timers
-      if (inactivityTimer.current) {
-        clearTimeout(inactivityTimer.current)
-      }
-
-      // If sleeping, wake up immediately on activity
-      if (isSleeping || isAnimating) {
-        bounceBackAllChars()
-      }
-
-      // Restart the inactivity timer
-      startInactivityTimer()
+      resetInactivityTimer()
     }
 
-    const events = ["mousemove", "keydown", "mousedown", "touchstart"]
+    const events = ["mousemove", "keydown", "mousedown", "touchstart", "scroll"]
     events.forEach((event) => window.addEventListener(event, handleUserActivity))
 
     // Initialize the timer on mount
@@ -166,9 +104,8 @@ export default function FeederPage({
     return () => {
       events.forEach((event) => window.removeEventListener(event, handleUserActivity))
       if (inactivityTimer.current) clearTimeout(inactivityTimer.current)
-      stopDroppingCharacters()
     }
-  }, [isSleeping, title.length])
+  }, [showInactivityPopup])
 
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
@@ -357,38 +294,39 @@ export default function FeederPage({
     <>
          <NavigationMenu />
       <div className="bg-[#fdf5e6] min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
-        <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
-          <div className="title-container relative text-2xl font-bold text-center mb-4 h-10">
-            {/* Replace text sleeping message with image */}
-{isSleeping && (
-  <div className="sleeping-message absolute inset-0 flex items-center justify-center z-20">
-    <Image
-      src="/sleeping-2.jpg" // Path to your JPEG image in public folder
-      alt="Sleeping indicator"
-      width={120} // Adjust as needed
-      height={120} // Adjust as needed
-      className="animate-pulse" // Keep the pulsing animation if desired
-    />
-  </div>
-)}
 
-            {/* Original title */}
-            <h1
-              ref={titleRef}
-              className={`text-2xl font-bold text-center mb-4 relative z-10 ${
-                isSleeping ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              {title.split(/(\s+)/).map((part, idx) => {
-                if (part.trim() === "") return <span key={`space-${idx}`}>{part}</span>
-                return part.split("").map((char, charIdx) => (
-                  <span key={`${idx}-${charIdx}`} className="char-span relative inline-block">
-                    {char}
-                  </span>
-                ))
-              })}
-            </h1>
+         {/* Inactivity Popup */}
+         {showInactivityPopup && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+              
+              <div className="absolute animate-floatAround">
+                <Image
+                  src="/tnc-home-logo-nw.png"
+                  alt="TNC Logo"
+                  width={60}
+                  height={60}
+                  className="drop-shadow-lg"
+                />
+              </div>
+
+              {/* Popup Container */}
+              <div className="relative bg-white p-8 rounded-lg shadow-xl text-center max-w-md z-10 animate-fadeIn mx-4">
+
+              <h2 className="text-2xl font-bold mb-4">We miss you already 🥺</h2>
+              <p className="text-gray-600 mb-6">
+                When are you going to come back... 
+              </p>
+              
+            </div>
           </div>
+        )}
+
+        <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
+            {/* Original title */}
+             <h1 className="text-2xl font-bold text-center mb-4">
+            {title}
+          </h1>
+          
 
           {/* Machine Information */}
           <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
@@ -679,80 +617,55 @@ export default function FeederPage({
         </div>
       )}
 
-      <style jsx global>{`
-        @keyframes fallDownOnly {
-          0% {
-            transform: translateY(0);
-            color: darkred;
-          }
-          100% {
-            transform: translateY(calc(60vh - 60px));
-            color: darkred;
-          }
-        }
+<style jsx global>{`
+         @keyframes floatAround {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 10%;
+      left: 10%;
+    }
+    25% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 10%;
+      left: 80%;
+    }
+    50% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 80%;
+      left: 80%;
+    }
+    75% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 80%;
+      left: 20%;
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 10%;
+      left: 10%;
+    }
+  }
 
-        @keyframes bounceBack {
-          0% {
-            transform: translateY(calc(60vh - 60px));
-            color: darkred;
-          }
-          50% {
-            transform: translateY(calc(60vh - 100px));
-            color: darkred;
-          }
-          100% {
-            transform: translateY(0);
-            color: black;
-          }
-        }
+  .animate-floatAround {
+    animation: floatAround 12s infinite ease-in-out;
+  }
 
-        .char-span {
-          display: inline-block;
-          position: relative;
-          z-index: 0;
-          transition: opacity 0.3s ease;
-        }
+  .animate-pulse {
+    animation: pulse 1.5s infinite;
+  }
 
-        .fall-down {
-          animation: fallDownOnly 1.2s forwards ease-in-out;
-          position: fixed;
-          z-index: 9999;
-        }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
 
-        .bounce-back {
-          animation: bounceBack 1.2s forwards ease-in-out;
-        }
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out;
+  }
 
-        .sleeping-message {
-          transition: opacity 0.5s ease;
-          animation: gentlePulse 3s infinite;
-        }
-
-        @keyframes gentlePulse {
-          0%, 100% { opacity: 0.8; }
-          50% { opacity: 1; }
-        }
-
-        @keyframes dotPulse {
-          0%, 30% { opacity: 0; }
-          50% { opacity: 1; }
-          70%, 100% { opacity: 0; }
-        }
-
-        .dot-1 {
-          animation: dotPulse 3s infinite 0s;
-        }
-        .dot-2 {
-          animation: dotPulse 3s infinite 1s;
-        }
-        .dot-3 {
-          animation: dotPulse 3s infinite 2s;
-        }
-
-        .title-container {
-          min-height: 3rem;
-          position: relative;
-        }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
       `}</style>
     </>
   )
