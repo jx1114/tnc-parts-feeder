@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import NavigationMenu from "./navigation-menu"
 import ModelViewer from "./model-viewer"
-import { RefreshCw, Printer,Clipboard } from "lucide-react"
+import { RefreshCw, Clipboard } from "lucide-react"
 
 export type FeederPageProps = {
   title: string
@@ -60,83 +60,115 @@ export default function FeederPage({
   const router = useRouter()
   const pathname = usePathname()
 
-  
   const [showPasteModal, setShowPasteModal] = useState(false)
   const [pasteText, setPasteText] = useState("")
 
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isSleeping, setIsSleeping] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
-  const dropInterval = useRef<NodeJS.Timeout | null>(null);
+  const dropInterval = useRef<NodeJS.Timeout | null>(null)
+  const titleRef = useRef<HTMLHeadingElement>(null)
 
   function dropAllCharsInRandomOrder() {
-    const chars = Array.from(document.querySelectorAll<HTMLElement>(".char-span"));
-    const shuffled = chars.sort(() => Math.random() - 0.5);
-  
+    const chars = Array.from(document.querySelectorAll<HTMLElement>(".char-span"))
+    const shuffled = chars.sort(() => Math.random() - 0.5)
+
+    shuffled.forEach(char => {
+      char.style.opacity = '1'
+    })
+
     shuffled.forEach((char, index) => {
       setTimeout(() => {
-        char.classList.add("fall-down");
-      }, index * 300);
-    });
-  
-    const totalDropTime = shuffled.length * 300 + 1200; // 300ms delay per + 1.2s animation
-  
+        char.classList.add("fall-down")
+      }, index * 300)
+    })
+
+    const totalDropTime = shuffled.length * 300 + 1200
+
     setTimeout(() => {
-      // Bounce back all at once
-      chars.forEach((char) => {
-        char.classList.remove("fall-down");
-        char.classList.add("bounce-back");
-  
-        // Clean up class after animation so it can retrigger later
-        setTimeout(() => {
-          char.classList.remove("bounce-back");
-        }, 1200);
-      });
-    }, totalDropTime);
+      setIsSleeping(true)
+      
+      // Set sleep duration to 30 seconds (30000ms)
+      inactivityTimer.current = setTimeout(() => {
+        bounceBackAllChars()
+        // Reset the timer after waking up
+        startInactivityTimer()
+      }, 30000)
+    }, totalDropTime)
   }
 
-function stopDroppingCharacters() {
-  if (dropInterval.current) {
-    clearInterval(dropInterval.current);
-    dropInterval.current = null;
+  function stopDroppingCharacters() {
+    if (dropInterval.current) {
+      clearInterval(dropInterval.current)
+      dropInterval.current = null
+    }
   }
+
+  function bounceBackAllChars() {
+    const chars = Array.from(document.querySelectorAll<HTMLElement>(".char-span"))
+
+    setIsSleeping(false)
+    setIsAnimating(false) // Reset animation state when bouncing back
+
+    chars.forEach((char) => {
+      char.classList.remove("fall-down")
+      char.classList.add("bounce-back")
+
+      setTimeout(() => {
+        char.classList.remove("bounce-back")
+      }, 1200)
+    })
+
+     // Restart inactivity timer after bounce back completes
+  setTimeout(() => {
+    startInactivityTimer()
+  }, 1200) // Match this with bounce animation duration
 }
 
 
+  function startInactivityTimer() {
+    // Clear any existing timers first
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current)
+    }
 
-  // Inactivity detection: 3s idle triggers animation
+     // Only set new timer if not currently animating or sleeping
+  if (!isAnimating && !isSleeping) {
+    inactivityTimer.current = setTimeout(() => {
+      setIsAnimating(true)
+      dropAllCharsInRandomOrder()
+    }, 8000)
+  }
+  }
+
   useEffect(() => {
-    let animationTimeout: NodeJS.Timeout;
-  
-    const resetTimer = () => {
+    const handleUserActivity = () => {
+      // Clear any existing timers
       if (inactivityTimer.current) {
-        clearTimeout(inactivityTimer.current);
+        clearTimeout(inactivityTimer.current)
       }
-      setIsAnimating(false)
-      stopDroppingCharacters(); // stop when user is active
-  
-      inactivityTimer.current = setTimeout(() => {
-        setIsAnimating(true)
-        dropAllCharsInRandomOrder();  // start dropping on inactivity
-  
-        animationTimeout = setTimeout(() => {
-          resetTimer(); // restart listener after 3s of animation
-        }, 6000 + 300 * title.length);
-      }, 8000); // 8s inactivity triggers drop
-    };
-  
-    const events = ["mousemove", "keydown", "mousedown", "touchstart"];
-    events.forEach((event) => window.addEventListener(event, resetTimer));
-  
-    resetTimer(); // start timer on mount
-  
+
+      // If sleeping, wake up immediately on activity
+      if (isSleeping || isAnimating) {
+        bounceBackAllChars()
+      }
+
+      // Restart the inactivity timer
+      startInactivityTimer()
+    }
+
+    const events = ["mousemove", "keydown", "mousedown", "touchstart"]
+    events.forEach((event) => window.addEventListener(event, handleUserActivity))
+
+    // Initialize the timer on mount
+    startInactivityTimer()
+
     return () => {
-      events.forEach((event) => window.removeEventListener(event, resetTimer));
-      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-      if (animationTimeout) clearTimeout(animationTimeout);
-      stopDroppingCharacters();
-    };
-  }, []);
-  
+      events.forEach((event) => window.removeEventListener(event, handleUserActivity))
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current)
+      stopDroppingCharacters()
+    }
+  }, [isSleeping, title.length])
 
   const allDimensionsFilled = () => {
     return Object.keys(dimensionDescriptions).every((key) => feederData.dimensions[key])
@@ -146,9 +178,9 @@ function stopDroppingCharacters() {
     return machineInfoFields
       .filter((field) => field.id !== "remark")
       .every((field) => {
-      const value = feederData.machineInfo[field.id]
-      return value !== undefined && value.trim() !== ""
-    })
+        const value = feederData.machineInfo[field.id]
+        return value !== undefined && value.trim() !== ""
+      })
   }
 
   const clearCurrentPageData = () => {
@@ -264,11 +296,9 @@ function stopDroppingCharacters() {
       // Parse the pasted text
       const lines = pasteText.split("\n").filter((line) => line.trim() !== "")
 
-
       // Create a new object to store the parsed data
       const newMachineInfo: Record<string, string> = {}
       const newDimensions: Record<string, string> = {}
-
 
       // Process each line
       lines.forEach((line) => {
@@ -281,7 +311,6 @@ function stopDroppingCharacters() {
           }
         })
 
-
         // Try to match dimensions
         Object.entries(dimensionDescriptions).forEach(([key, description]) => {
           // Match either "A: 100" or "A (Bowl Diameter): 100" or just look for the dimension code
@@ -289,11 +318,9 @@ function stopDroppingCharacters() {
           const detailedRegex = new RegExp(`^\\s*${key}\\s*\$$.*\$$\\s*:\\s*(\\d+)`, "i")
           const valueOnlyRegex = new RegExp(`\\b${key}\\b[^:]*?\\b(\\d+)\\s*mm\\b`, "i")
 
-
           const simpleMatch = line.match(simpleRegex)
           const detailedMatch = line.match(detailedRegex)
           const valueOnlyMatch = line.match(valueOnlyRegex)
-
 
           if (simpleMatch && simpleMatch[1]) {
             newDimensions[key] = simpleMatch[1].trim()
@@ -305,21 +332,17 @@ function stopDroppingCharacters() {
         })
       })
 
-
       // Update the form data with the parsed values
       const updatedData = {
         machineInfo: { ...feederData.machineInfo, ...newMachineInfo },
         dimensions: { ...feederData.dimensions, ...newDimensions },
       }
 
-
       // Force a complete update of the form data
       updateFeederData(feederType, updatedData)
 
-
       // Log the updated data to verify
       console.log("Updated data:", updatedData)
-
 
       setShowPasteModal(false)
       setPasteText("")
@@ -330,92 +353,106 @@ function stopDroppingCharacters() {
     }
   }
 
-
   return (
     <>
-      <NavigationMenu />
+         <NavigationMenu />
       <div className="bg-[#fdf5e6] min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
         <div ref={printRef} className="print-container flex flex-col h-[297mm] p-4 print:p-0 relative">
-          
+          <div className="title-container relative text-2xl font-bold text-center mb-4 h-10">
+            {/* Replace text sleeping message with image */}
+{isSleeping && (
+  <div className="sleeping-message absolute inset-0 flex items-center justify-center z-20">
+    <Image
+      src="/sleeping-2.jpg" // Path to your JPEG image in public folder
+      alt="Sleeping indicator"
+      width={120} // Adjust as needed
+      height={120} // Adjust as needed
+      className="animate-pulse" // Keep the pulsing animation if desired
+    />
+  </div>
+)}
 
-        <h1 className="text-2xl font-bold text-center mb-4 relative z-100">
-  {title.split(/(\s+)/).map((part, idx) => {
-    if (part.trim() === "") return <span key={`space-${idx}`}>{part}</span>
-    return part.split("").map((char, charIdx) => (
-      <span key={`${idx}-${charIdx}`} className="char-span relative inline-block">
-        {char}
-      </span>
-    ))
-  })}
-</h1>
+            {/* Original title */}
+            <h1
+              ref={titleRef}
+              className={`text-2xl font-bold text-center mb-4 relative z-10 ${
+                isSleeping ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              {title.split(/(\s+)/).map((part, idx) => {
+                if (part.trim() === "") return <span key={`space-${idx}`}>{part}</span>
+                return part.split("").map((char, charIdx) => (
+                  <span key={`${idx}-${charIdx}`} className="char-span relative inline-block">
+                    {char}
+                  </span>
+                ))
+              })}
+            </h1>
+          </div>
 
-
-       {/* Machine Information */}
-        <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
-          <h2 className="text-lg font-medium mb-2">Machine Information</h2>
-          <div className="grid grid-cols-3 gap-4">
-            {machineInfoFields.map((field) => (
-              <div key={field.id}>
-                <label htmlFor={field.id} className="block mb-1 font-medium">
-                  {field.label}
-                </label>
-                {field.id === "remark" ? (
-                  <div className="relative">
-                    <textarea
+          {/* Machine Information */}
+          <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
+            <h2 className="text-lg font-medium mb-2">Machine Information</h2>
+            <div className="grid grid-cols-3 gap-4">
+              {machineInfoFields.map((field) => (
+                <div key={field.id}>
+                  <label htmlFor={field.id} className="block mb-1 font-medium">
+                    {field.label}
+                  </label>
+                  {field.id === "remark" ? (
+                    <div className="relative">
+                      <textarea
+                        id={field.id}
+                        value={feederData.machineInfo[field.id] || ""}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (value.length <= 60) {
+                            updateMachineInfo(field.id, value)
+                            // Auto-grow the textarea
+                            e.target.style.height = "auto"
+                            e.target.style.height = `${e.target.scrollHeight}px`
+                          }
+                        }}
+                        maxLength={60}
+                        rows={1}
+                        className="w-full border rounded-md px-3 py-2 resize-none overflow-hidden"
+                        placeholder="Enter up to 60 characters"
+                      />
+                      <div className="text-right text-sm text-gray-500 mt-1 print:hidden">
+                        {feederData.machineInfo[field.id]?.length || 0} / 60 chars
+                      </div>
+                    </div>
+                  ) : field.type === "select" ? (
+                    <select
                       id={field.id}
                       value={feederData.machineInfo[field.id] || ""}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        if (value.length <= 60) {
-                          updateMachineInfo(field.id, value)
-                           // Auto-grow the textarea
-                          e.target.style.height = "auto"
-                          e.target.style.height = `${e.target.scrollHeight}px`
-                        }
-                      }}
-                      maxLength={60}
-                      rows={1}
-                      className="w-full border rounded-md px-3 py-2 resize-none overflow-hidden"
-                      placeholder="Enter up to 60 characters"
+                      onChange={(e) => updateMachineInfo(field.id, e.target.value)}
+                      className={`w-full border rounded-md px-3 py-2 ${
+                        !feederData.machineInfo[field.id] ? "border-red-500" : ""
+                      }`}
+                    >
+                      <option value="">Select</option>
+                      {field.options?.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      id={field.id}
+                      type={field.type}
+                      value={feederData.machineInfo[field.id] || ""}
+                      onChange={(e) => updateMachineInfo(field.id, e.target.value)}
+                      className={`w-full border rounded-md px-3 py-2 ${
+                        field.id !== "remark" && !feederData.machineInfo[field.id] ? "border-red-500" : ""
+                      }`}
                     />
-                    <div className="text-right text-sm text-gray-500 mt-1 print:hidden">
-                      {(feederData.machineInfo[field.id]?.length || 0)} / 60 chars
-                    </div>
-                  </div>
-                ) : field.type === "select" ? (
-                  <select
-                    id={field.id}
-                    value={feederData.machineInfo[field.id] || ""}
-                    onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                    className={`w-full border rounded-md px-3 py-2 ${
-                      !feederData.machineInfo[field.id] ? "border-red-500" : ""
-                    }`}
-                  >
-                    <option value="">Select</option>
-                    {field.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    id={field.id}
-                    type={field.type}
-                    value={feederData.machineInfo[field.id] || ""}
-                    onChange={(e) => updateMachineInfo(field.id, e.target.value)}
-                    className={`w-full border rounded-md px-3 py-2 ${
-                      field.id !== "remark" && !feederData.machineInfo[field.id]
-                        ? "border-red-500"
-                        : ""
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-
 
           {/* Feeder Design */}
           <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
@@ -434,7 +471,9 @@ function stopDroppingCharacters() {
                   key={dim}
                   onClick={() => handleDimensionClick(dim)}
                   className={`absolute text-xs flex items-center justify-center ${
-                    feederData.dimensions[dim] ? "bg-white border-none text-black" : "bg-white border border-transparent text-red-500"
+                    feederData.dimensions[dim]
+                      ? "bg-white border-none text-black"
+                      : "bg-white border border-transparent text-red-500"
                   }`}
                   style={{
                     left: `${x}%`,
@@ -466,23 +505,16 @@ function stopDroppingCharacters() {
                 <Clipboard className="mr-2 h-4 w-4" />
                 Paste Data
               </button>
-
             </div>
 
-
             <div className="absolute bottom-6 right-6 flex print:hidden">
-
-              <button
-                onClick={handleOkClick}
-                className="bg-black text-white px-4 py-2 rounded-md"
-              >
+              <button onClick={handleOkClick} className="bg-black text-white px-4 py-2 rounded-md">
                 OK
               </button>
             </div>
           </div>
 
           <div className="text-center text-sm text-gray-500 mt-auto">Generated on {getCurrentDate()}</div>
-
 
           {nextPageRoute && (
             <button
@@ -540,164 +572,188 @@ function stopDroppingCharacters() {
 
         {/* Error Toast */}
         {showError && (
-          <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 p-4 ${
-            errorMessage.includes("successfully")
-              ? "bg-green-50 border-green-500 text-green-600"
-              : "bg-red-50 border-red-500 text-red-600"
-          } rounded-md shadow-lg print:hidden max-w-xs`}>
+          <div
+            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 p-4 ${
+              errorMessage.includes("successfully")
+                ? "bg-green-50 border-green-500 text-green-600"
+                : "bg-red-50 border-red-500 text-red-600"
+            } rounded-md shadow-lg print:hidden max-w-xs`}
+          >
             {errorMessage}
           </div>
         )}
 
-{showSuccessModal && (
-  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center print:hidden">
-    <div className="relative bg-white p-6 rounded-lg w-[500px] shadow-lg text-center">
-      {/* Close Button as X */}
-      <button
-        onClick={() => setShowSuccessModal(false)}
-        className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
-        aria-label="Close"
-      >
-        &times;
-      </button>
-
-      <h2 className="text-2xl font-bold mb-4">Congratulations, your dimension is completed!🎉🎉🎉</h2>
-      
-
-      {/* Looping video */}
-      <div className="w-full rounded-md mb-4 border-2 border-black bg-white overflow-hidden">
-        <video
-          src={`/hopper.mp4`} // or use `/yourVideo.mp4`
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-auto block"
-        />
-      </div>
-
-       {/* Buttons: Save and View 3D */}
-       <div className="flex justify-center gap-4 mt-2">
-        
-        <button
-          onClick={() => {
-            setShowSuccessModal(false)
-            setShowModelViewer(true)
-          }}
-          className= "bg-white text-black border border-black px-6 py-2 rounded-md"          
-        >
-          View 3D
-        </button>
-
-        <button
-          onClick={handlePrint}
-          className="bg-black text-white px-6 py-2 rounded-md"
-        >
-          Print
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-        {/* Model Viewer */}
-        {showModelViewer && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
-            
-              <ModelViewer
-                modelPath={modelPath}
-                isOpen={showModelViewer}
-                onClose={() => setShowModelViewer(false)}
-                onLoad={() => {}}
-                dimensions={feederData.dimensions}
-              />
-              
-           
-          </div>
-        )}
-      </div>
-
-{/* Paste Data Modal */}
-{showPasteModal && (
+        {showSuccessModal && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center print:hidden">
-            <div className="bg-white rounded-lg p-6 shadow-md w-[600px]">
-              <h2 className="text-xl font-bold mb-4">Paste Configuration Data</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Paste your configuration data below. The system will try to extract machine information and dimensions.
-              </p>
+            <div className="relative bg-white p-6 rounded-lg w-[500px] shadow-lg text-center">
+              {/* Close Button as X */}
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
+                aria-label="Close"
+              >
+                &times;
+              </button>
 
+              <h2 className="text-2xl font-bold mb-4">Congratulations, your dimension is completed!🎉🎉🎉</h2>
 
-              <textarea
-                value={pasteText}
-                onChange={(e) => setPasteText(e.target.value)}
-                placeholder="Paste your configuration data here..."
-                rows={10}
-                className="border w-full p-2 rounded mb-4"
-              />
+              {/* Looping video */}
+              <div className="w-full rounded-md mb-4 border-2 border-black bg-white overflow-hidden">
+                <video
+                  src={`/hopper.mp4`} // or use `/yourVideo.mp4`
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-auto block"
+                />
+              </div>
 
-
-              <div className="flex justify-end gap-2">
+              {/* Buttons: Save and View 3D */}
+              <div className="flex justify-center gap-4 mt-2">
                 <button
-                  className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
-                  onClick={() => setShowPasteModal(false)}
+                  onClick={() => {
+                    setShowSuccessModal(false)
+                    setShowModelViewer(true)
+                  }}
+                  className="bg-white text-black border border-black px-6 py-2 rounded-md"
                 >
-                  Cancel
+                  View 3D
                 </button>
-                <button
-                  className="bg-black text-white px-4 py-2 rounded"
-                  onClick={processPastedData}
-                  disabled={!pasteText.trim()}
-                >
-                  Import Data
+
+                <button onClick={handlePrint} className="bg-black text-white px-6 py-2 rounded-md">
+                  Print
                 </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* Model Viewer */}
+        {showModelViewer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden">
+            <ModelViewer
+              modelPath={modelPath}
+              isOpen={showModelViewer}
+              onClose={() => setShowModelViewer(false)}
+              onLoad={() => {}}
+              dimensions={feederData.dimensions}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Paste Data Modal */}
+      {showPasteModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center print:hidden">
+          <div className="bg-white rounded-lg p-6 shadow-md w-[600px]">
+            <h2 className="text-xl font-bold mb-4">Paste Configuration Data</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Paste your configuration data below. The system will try to extract machine information and dimensions.
+            </p>
+
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder="Paste your configuration data here..."
+              rows={10}
+              className="border w-full p-2 rounded mb-4"
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
+                onClick={() => setShowPasteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-black text-white px-4 py-2 rounded"
+                onClick={processPastedData}
+                disabled={!pasteText.trim()}
+              >
+                Import Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
- @keyframes fallDownOnly {
-  0% {
-    transform: translateY(0);
-    color: darkred;
-  }
-  100% {
-    transform: translateY(calc(60vh - 60px));
-    color: darkred;
-  }
-}
+        @keyframes fallDownOnly {
+          0% {
+            transform: translateY(0);
+            color: darkred;
+          }
+          100% {
+            transform: translateY(calc(60vh - 60px));
+            color: darkred;
+          }
+        }
 
-@keyframes bounceBack {
-  0% {
-    transform: translateY(calc(60vh - 60px));
-    color: darkred;
-  }
-  50% {
-    transform: translateY(calc(60vh - 100px));
-    color: darkred;
-  }
-  100% {
-    transform: translateY(0);
-    color: black;
-  }
-}
+        @keyframes bounceBack {
+          0% {
+            transform: translateY(calc(60vh - 60px));
+            color: darkred;
+          }
+          50% {
+            transform: translateY(calc(60vh - 100px));
+            color: darkred;
+          }
+          100% {
+            transform: translateY(0);
+            color: black;
+          }
+        }
 
-.char-span {
-  display: inline-block;
-  position: relative;
-  z-index: 0;
-}
+        .char-span {
+          display: inline-block;
+          position: relative;
+          z-index: 0;
+          transition: opacity 0.3s ease;
+        }
 
-.fall-down {
-  animation: fallDownOnly 4s forwards ease-in-out;
-  position: fixed;
-  z-index: 9999;
-}
+        .fall-down {
+          animation: fallDownOnly 1.2s forwards ease-in-out;
+          position: fixed;
+          z-index: 9999;
+        }
 
-.bounce-back {
-  animation: bounceBack 1.2s forwards ease-in-out;
-}
-`}</style>
+        .bounce-back {
+          animation: bounceBack 1.2s forwards ease-in-out;
+        }
+
+        .sleeping-message {
+          transition: opacity 0.5s ease;
+          animation: gentlePulse 3s infinite;
+        }
+
+        @keyframes gentlePulse {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 1; }
+        }
+
+        @keyframes dotPulse {
+          0%, 30% { opacity: 0; }
+          50% { opacity: 1; }
+          70%, 100% { opacity: 0; }
+        }
+
+        .dot-1 {
+          animation: dotPulse 3s infinite 0s;
+        }
+        .dot-2 {
+          animation: dotPulse 3s infinite 1s;
+        }
+        .dot-3 {
+          animation: dotPulse 3s infinite 2s;
+        }
+
+        .title-container {
+          min-height: 3rem;
+          position: relative;
+        }
+      `}</style>
     </>
   )
 }
