@@ -5,11 +5,12 @@ import NavigationMenu from "@/components/navigation-menu"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight, ArrowRight, Settings, Package, Layers } from "lucide-react"
+import { useSwipeable } from 'react-swipeable'
 
 export default function WelcomePage() {
   const router = useRouter()
 
-  // Slides with same image but different content
+  // Slides with durations matching video lengths
   const slides = [
     {
       image: "/home image.png?height=600&width=800",
@@ -18,7 +19,7 @@ export default function WelcomePage() {
     },
     {
       image: "/home image.png?height=600&width=800",
-      title: "Click the right arrow [->] to know more details",
+      title: "Swipe to right to know more details",
       duration: 5000,
     },
     {
@@ -60,46 +61,49 @@ export default function WelcomePage() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Debug state to track button clicks
-  const [debugInfo, setDebugInfo] = useState("")
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   // Initialize video refs array
   useEffect(() => {
     videoRefs.current = videoRefs.current.slice(0, slides.length)
   }, [slides.length])
 
+  // Swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => !isTransitioning && handleNextImage(),
+    onSwipedRight: () => !isTransitioning && handlePrevImage(),
+    preventScrollOnSwipe: true,
+    trackMouse: false,
+    delta: 50
+  })
+
+  // Carousel auto-rotation
   useEffect(() => {
-    // Animation on page load
     setIsLoaded(true)
 
-      // Start the interval with current slide's duration
-      const startInterval = () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-        }
-        
-        intervalRef.current = setInterval(() => {
-          if (!isTransitioning) {
-            handleNextImage()
-          }
-        }, slides[currentIndex].duration)
+    const startInterval = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
       }
-  
-      startInterval()
-  
-      // Cleanup interval on unmount
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
+      
+      intervalRef.current = setInterval(() => {
+        if (!isTransitioning) {
+          handleNextImage()
         }
+      }, slides[currentIndex].duration)
+    }
+
+    startInterval()
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
       }
-    }, [currentIndex, isTransitioning])
+    }
+  }, [currentIndex, isTransitioning])
 
-
-  // Handle video playback when slide changes
+  // Video playback control
   useEffect(() => {
-    // Stop all videos first
     videoRefs.current.forEach((video) => {
       if (video) {
         video.pause()
@@ -107,71 +111,55 @@ export default function WelcomePage() {
       }
     })
 
-    // Play the current video if it exists
     const currentVideo = videoRefs.current[currentIndex]
     if (currentVideo && slides[currentIndex].video) {
-      // Small delay to ensure the slide transition has started
-      const playPromise = setTimeout(() => {
-        if (currentVideo) {
-          currentVideo.play().catch((e) => console.log("Video play error:", e))
+      const playPromise = currentVideo.play().catch(e => console.log("Video play error:", e))
+      
+      return () => {
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            currentVideo.pause()
+          })
         }
-      }, 100)
-
-      return () => clearTimeout(playPromise)
+      }
     }
-  }, [currentIndex, slides])
+  }, [currentIndex])
 
-  // Separate handler functions to avoid closure issues
-  const handlePrevImage = () => {
-    if (isTransitioning) return
+  const handleSlideChange = (newIndex: number) => {
+    if (isTransitioning || newIndex === currentIndex) return
 
-    setDebugInfo("Prev clicked: moving from " + currentIndex)
     setIsTransitioning(true)
+    setCurrentIndex(newIndex)
 
-    // Use functional update to ensure we're working with the latest state
-    setCurrentIndex((prevIndex) => {
-      const newIndex = prevIndex === 0 ? slides.length - 1 : prevIndex - 1
-      console.log(`Moving from slide ${prevIndex} to ${newIndex}`)
-      return newIndex
-    })
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    
+    intervalRef.current = setInterval(() => {
+      if (!isTransitioning) {
+        handleNextImage()
+      }
+    }, slides[newIndex].duration)
 
-    // Reset transition state after animation completes
     setTimeout(() => {
       setIsTransitioning(false)
     }, 1000)
+  }
+
+  const handlePrevImage = () => {
+    const newIndex = currentIndex === 0 ? slides.length - 1 : currentIndex - 1
+    handleSlideChange(newIndex)
   }
 
   const handleNextImage = () => {
-    if (isTransitioning) return
-
-    setDebugInfo("Next clicked: moving from " + currentIndex)
-    setIsTransitioning(true)
-
-    // Use functional update to ensure we're working with the latest state
-    setCurrentIndex((prevIndex) => {
-      const newIndex = prevIndex === slides.length - 1 ? 0 : prevIndex + 1
-      console.log(`Moving from slide ${prevIndex} to ${newIndex}`)
-      return newIndex
-    })
-
-    // Reset transition state after animation completes
-    setTimeout(() => {
-      setIsTransitioning(false)
-    }, 1000)
+    const newIndex = currentIndex === slides.length - 1 ? 0 : currentIndex + 1
+    handleSlideChange(newIndex)
   }
 
   const handleGoToSlide = (index: number) => {
-    if (isTransitioning || index === currentIndex) return
-
-    setDebugInfo(`Go to slide ${index} from ${currentIndex}`)
-    setIsTransitioning(true)
-    setCurrentIndex(index)
-
-    // Reset transition state after animation completes
-    setTimeout(() => {
-      setIsTransitioning(false)
-    }, 1000)
+    handleSlideChange(index)
   }
+
 
   const feederTypes = [
     { name: "Bowl Feeder", path: "/single/bowl", icon: <Package className="w-6 h-6" /> },
@@ -185,6 +173,8 @@ export default function WelcomePage() {
     { name: "Set C (Bowl + Linear + Hopper)", path: "/set/set-c", icon: <Layers className="w-6 h-6" /> },
   ]
 
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-950 text-white">
       <NavigationMenu />
@@ -193,7 +183,8 @@ export default function WelcomePage() {
         className={`transition-all duration-1000 ease-out transform ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
       >
         {/* Hero Section */}
-        <div className="relative h-[60vh] overflow-hidden">
+        <div className="relative h-[60vh] overflow-hidden"
+          {...swipeHandlers}>
           {/* Background pattern */}
           <div className="absolute inset-0 bg-black opacity-30 z-10"></div>
           <div className="absolute inset-0 bg-[url('/placeholder.svg?height=100&width=100')] bg-repeat opacity-10 z-0"></div>
@@ -221,27 +212,11 @@ export default function WelcomePage() {
               </div>
             ))}
 
-            {/* Navigation buttons */}
-            <button
-              type="button"
-              onClick={handlePrevImage}
-              className="absolute top-1/2 left-4 z-30 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
-              type="button"
-              onClick={handleNextImage}
-              className="absolute top-1/2 right-4 z-30 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
-              aria-label="Next image"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+           
 
             {/* Overlay content */}
             <div className="absolute inset-0 flex items-center justify-center z-20">
-              <div className="text-center px-4 py-4 backdrop-blur-sm bg-black/30 rounded-xl max-w-3xl mx-auto">
+              <div className="text-center px-4 py-4 backdrop-blur-sm bg-black/30 w-full">
                 {slides.map((slide, idx) => (
                   <div
                     key={idx}
