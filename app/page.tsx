@@ -13,18 +13,43 @@ export default function WelcomePage() {
   const slides = [
     {
       image: "/home image.png?height=600&width=800",
+      title: "Welcome to TNC Feeder Configuration Tool",
+      duration: 5000,
+    },
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "Click the right arrow [->] to know more details",
+      duration: 5000,
+    },
+    {
+      image: "/home image.png?height=600&width=800",
       title: "Step 1: Choose single or set",
-      video: "hopper.mp4",
+      video: "step1.mp4",
+      duration: 9000,
     },
     {
       image: "/home image.png?height=600&width=800",
       title: "Step 2: Fill in the information",
-      video: "hopper.mp4",
+      video: "step2.mp4",
+      duration: 14000,
     },
     {
       image: "/home image.png?height=600&width=800",
-      title: "Step 3: Click OK",
-      video: "hopper.mp4",
+      title: "Step 3: Send your configuration",
+      video: "step3.mp4",
+      duration: 18000,
+    },
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "View 3D Dimension",
+      video: "3d.mp4",
+      duration: 18000,
+    },
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "Set value as 0",
+      video: "value0.mp4",
+      duration: 8000,
     },
   ]
 
@@ -34,6 +59,7 @@ export default function WelcomePage() {
   const [hoverFeeder, setHoverFeeder] = useState<string | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Debug state to track button clicks
   const [debugInfo, setDebugInfo] = useState("")
@@ -47,15 +73,29 @@ export default function WelcomePage() {
     // Animation on page load
     setIsLoaded(true)
 
-    // Auto-rotate images
-    const interval = setInterval(() => {
-      if (!isTransitioning) {
-        handleNextImage()
+      // Start the interval with current slide's duration
+      const startInterval = () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+        }
+        
+        intervalRef.current = setInterval(() => {
+          if (!isTransitioning) {
+            handleNextImage()
+          }
+        }, slides[currentIndex].duration)
       }
-    }, 8000) // Longer interval to allow video to play
+  
+      startInterval()
+  
+      // Cleanup interval on unmount
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+        }
+      }
+    }, [currentIndex, isTransitioning])
 
-    return () => clearInterval(interval)
-  }, [isTransitioning])
 
   // Handle video playback when slide changes
   useEffect(() => {
@@ -226,7 +266,6 @@ export default function WelcomePage() {
                           className="w-full max-w-xl rounded-lg shadow-lg"
                           muted
                           playsInline
-                          loop
                           preload="auto"
                         />
                       </div>

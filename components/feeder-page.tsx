@@ -309,12 +309,23 @@ export default function FeederPage({
                 />
               </div>
 
+                {/* Second Logo - New Counter-Rotation Animation */}
+              <div className="absolute animate-floatAroundReverse">
+                <Image
+                  src="/tnc-home-logo-nw.png"
+                  alt="TNC Logo"
+                  width={60}
+                  height={60}
+                  className="drop-shadow-lg"
+                />
+              </div>
+
               {/* Popup Container */}
               <div className="relative bg-white p-8 rounded-lg shadow-xl text-center max-w-md z-10 animate-fadeIn mx-4">
 
-              <h2 className="text-2xl font-bold mb-4">We miss you already 🥺</h2>
+              <h2 className="text-2xl font-bold mb-4">We're here waiting for you to come back. 😊</h2>
               <p className="text-gray-600 mb-6">
-                When are you going to come back... 
+                Don't say goodbye to us... 
               </p>
               
             </div>
@@ -618,7 +629,7 @@ export default function FeederPage({
       )}
 
 <style jsx global>{`
-         @keyframes floatAround {
+    @keyframes floatAround {
     0% {
       transform: translate(-50%, -50%) rotate(0deg);
       top: 10%;
@@ -646,17 +657,40 @@ export default function FeederPage({
     }
   }
 
+  @keyframes floatAroundReverse {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 90%;
+      left: 90%;
+    }
+    25% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 90%;
+      left: 20%;
+    }
+    50% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 20%;
+      left: 20%;
+    }
+    75% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 20%;
+      left: 80%;
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      top: 90%;
+      left: 90%;
+    }
+  }
+
   .animate-floatAround {
-    animation: floatAround 12s infinite ease-in-out;
+    animation: floatAround 15s infinite linear;
   }
 
-  .animate-pulse {
-    animation: pulse 1.5s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+  .animate-floatAroundReverse {
+    animation: floatAroundReverse 18s infinite linear;
   }
 
   .animate-fadeIn {
