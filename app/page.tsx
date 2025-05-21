@@ -5,7 +5,7 @@ import NavigationMenu from "@/components/navigation-menu"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight, ArrowRight, Settings, Package, Layers } from "lucide-react"
-import { useSwipeable } from 'react-swipeable'
+
 
 export default function WelcomePage() {
   const router = useRouter()
@@ -15,12 +15,12 @@ export default function WelcomePage() {
     {
       image: "/home image.png?height=600&width=800",
       title: "Welcome to TNC Feeder Configuration Tool",
-      duration: 5000,
+      duration: 3000,
     },
     {
       image: "/home image.png?height=600&width=800",
-      title: "Swipe to right to know more details",
-      duration: 5000,
+      title: "Ready to know more?",
+      duration: 3000,
     },
     {
       image: "/home image.png?height=600&width=800",
@@ -52,6 +52,12 @@ export default function WelcomePage() {
       video: "value0.mp4",
       duration: 8000,
     },
+    {
+      image: "/home image.png?height=600&width=800",
+      title: "Paste data",
+      video: "paste-data.mp4",
+      duration: 26000,
+    },
   ]
 
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -67,15 +73,6 @@ export default function WelcomePage() {
   useEffect(() => {
     videoRefs.current = videoRefs.current.slice(0, slides.length)
   }, [slides.length])
-
-  // Swipe handlers
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => !isTransitioning && handleNextImage(),
-    onSwipedRight: () => !isTransitioning && handlePrevImage(),
-    preventScrollOnSwipe: true,
-    trackMouse: false,
-    delta: 50
-  })
 
   // Carousel auto-rotation
   useEffect(() => {
@@ -161,6 +158,7 @@ export default function WelcomePage() {
   }
 
 
+  
   const feederTypes = [
     { name: "Bowl Feeder", path: "/single/bowl", icon: <Package className="w-6 h-6" /> },
     { name: "Linear Feeder", path: "/single/linear", icon: <Package className="w-6 h-6" /> },
@@ -183,8 +181,7 @@ export default function WelcomePage() {
         className={`transition-all duration-1000 ease-out transform ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
       >
         {/* Hero Section */}
-        <div className="relative h-[60vh] overflow-hidden"
-          {...swipeHandlers}>
+        <div className="relative h-[60vh] overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 bg-black opacity-30 z-10"></div>
           <div className="absolute inset-0 bg-[url('/placeholder.svg?height=100&width=100')] bg-repeat opacity-10 z-0"></div>
