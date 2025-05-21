@@ -293,7 +293,7 @@ export default function FeederPage({
   return (
     <>
          <NavigationMenu />
-      <div className="bg-[#fdf5e6] min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
+      <div className="bg-[#f2f4f4] min-h-screen w-[1050px] overflow-auto mx-auto p-4 print:p-0 light">
 
          {/* Inactivity Popup */}
          {showInactivityPopup && (
@@ -340,7 +340,7 @@ export default function FeederPage({
           
 
           {/* Machine Information */}
-          <div className="border bg-[#fffafa] rounded-md p-3 mb-3">
+          <div className="border bg-white rounded-md p-3 mb-3">
             <h2 className="text-lg font-medium mb-2">Machine Information</h2>
             <div className="grid grid-cols-3 gap-4">
               {machineInfoFields.map((field) => (
@@ -404,7 +404,7 @@ export default function FeederPage({
           </div>
 
           {/* Feeder Design */}
-          <div className="border bg-[#fffafa] rounded-md p-4 flex-grow mb-3 relative">
+          <div className="border bg-white rounded-md p-4 flex-grow mb-3 relative">
             <h2 className="text-lg font-medium mb-2">Feeder Info</h2>
             <p className="text-sm italic text-red-500 mb-2">* Set value as 0 if there is no dimension</p>
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>

@@ -24,22 +24,17 @@ export default function WelcomePage() {
     },
     {
       image: "/home image.png?height=600&width=800",
-      title: "Step 1: Choose single or set",
+      title: "Choose single or set",
       video: "step1.mp4",
       duration: 9000,
     },
     {
       image: "/home image.png?height=600&width=800",
-      title: "Step 2: Fill in the information",
+      title: "Fill in the information",
       video: "step2.mp4",
       duration: 14000,
     },
-    {
-      image: "/home image.png?height=600&width=800",
-      title: "Step 3: Send your configuration",
-      video: "step3.mp4",
-      duration: 18000,
-    },
+  
     {
       image: "/home image.png?height=600&width=800",
       title: "View 3D Dimension",
